@@ -1,0 +1,1 @@
+A Java Swing-based Smart Agriculture Management System for EcoFarm Connect, designed to modernize farm operations with crop management, farmer networking, inventory tracking, direct-to-consumer marketplace, sustainability analytics, communication tools, and quality assurance.
