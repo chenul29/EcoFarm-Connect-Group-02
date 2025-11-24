@@ -2,6 +2,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Admin Dashboard - EcoFarm Connect
@@ -185,6 +187,8 @@ public class adminDashboard extends JFrame {
     }
 
     // ========== CROP MANAGEMENT ==========
+    private JTable cropTable;
+
     private JPanel createCropManagementPanel() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBackground(Color.WHITE);
@@ -194,53 +198,46 @@ public class adminDashboard extends JFrame {
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.setBackground(Color.WHITE);
 
-        JLabel title = new JLabel("🌾 Crop Management");
+        JLabel title = new JLabel("🌾 Crop Management System");
         title.setFont(new Font("Arial", Font.BOLD, 20));
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         buttonPanel.setBackground(Color.WHITE);
 
-        JButton addCropBtn = createActionButton("Add Crop", new Color(46, 204, 113));
-        JButton updateStageBtn = createActionButton("Update Stage", new Color(52, 152, 219));
-        JButton viewScheduleBtn = createActionButton("View Schedule", new Color(155, 89, 182));
-        JButton exportDataBtn = createActionButton("Export Data", new Color(52, 73, 94));
+        JButton addCropBtn = createActionButton("➕ Add Crop", new Color(46, 204, 113));
+        JButton viewEditBtn = createActionButton("✏️ View/Edit", new Color(52, 152, 219));
+        JButton deleteCropBtn = createActionButton("🗑️ Delete", new Color(220, 53, 69));
+        JButton harvestPredictBtn = createActionButton("📅 Harvest Prediction", new Color(155, 89, 182));
+        JButton refreshBtn = createActionButton("🔄 Refresh", new Color(108, 117, 125));
 
-        // Add button actions
-        addCropBtn.addActionListener(e ->
-                JOptionPane.showMessageDialog(this, "Add Crop form - Coming soon!", "Info", JOptionPane.INFORMATION_MESSAGE)
-        );
-        updateStageBtn.addActionListener(e ->
-                JOptionPane.showMessageDialog(this, "Update Crop Stage - Coming soon!", "Info", JOptionPane.INFORMATION_MESSAGE)
-        );
-        viewScheduleBtn.addActionListener(e ->
-                JOptionPane.showMessageDialog(this, "View Planting/Harvest Schedule - Coming soon!", "Info", JOptionPane.INFORMATION_MESSAGE)
-        );
-        exportDataBtn.addActionListener(e ->
-                JOptionPane.showMessageDialog(this, "Export crop data as CSV/PDF - Coming soon!", "Info", JOptionPane.INFORMATION_MESSAGE)
-        );
+        // Button Actions
+        addCropBtn.addActionListener(e -> showAddCropDialog());
+        viewEditBtn.addActionListener(e -> showViewEditCropDialog());
+        deleteCropBtn.addActionListener(e -> deleteCrop());
+        harvestPredictBtn.addActionListener(e -> showHarvestPrediction());
+        refreshBtn.addActionListener(e -> loadCrops());
 
         buttonPanel.add(addCropBtn);
-        buttonPanel.add(updateStageBtn);
-        buttonPanel.add(viewScheduleBtn);
-        buttonPanel.add(exportDataBtn);
+        buttonPanel.add(viewEditBtn);
+        buttonPanel.add(deleteCropBtn);
+        buttonPanel.add(harvestPredictBtn);
+        buttonPanel.add(refreshBtn);
 
         topPanel.add(title, BorderLayout.NORTH);
         topPanel.add(buttonPanel, BorderLayout.CENTER);
 
-        // Table
-        String[] columns = {"ID", "Crop Name", "Farm", "Farmer", "Stage", "Health", "Planted", "Expected Harvest", "Status"};
-        Object[][] data = {
-                {1, "Wheat", "Green Valley Farm", "John Farmer", "Growing", "Excellent", "2025-09-15", "2025-12-15", "Active"},
-                {2, "Corn", "Sunny Acres", "Mary Smith", "Flowering", "Good", "2025-08-20", "2025-11-30", "Active"},
-                {3, "Rice", "River Farm", "Bob Johnson", "Planted", "Good", "2025-10-01", "2026-01-15", "Active"},
-                {4, "Tomatoes", "Hill Farm", "Alice Brown", "Harvesting", "Excellent", "2025-07-10", "2025-11-20", "Active"},
-                {5, "Potatoes", "Valley Farm", "Tom Wilson", "Growing", "Fair", "2025-09-05", "2025-12-10", "Active"}
-        };
+        // Crop List Table
+        String[] columns = {"ID", "Crop Name", "Variety", "Planted", "Harvest Date",
+                           "Soil Type", "Irrigation", "Stage", "Health", "Farmer"};
+        cropTable = new JTable(new Object[0][0], columns);
+        cropTable.setRowHeight(30);
+        cropTable.setFont(new Font("Arial", Font.PLAIN, 13));
+        cropTable.getTableHeader().setFont(new Font("Arial", Font.BOLD, 12));
+        JScrollPane scrollPane = new JScrollPane(cropTable);
+        scrollPane.setBorder(BorderFactory.createTitledBorder("Crop List"));
 
-        JTable table = new JTable(data, columns);
-        table.setRowHeight(30);
-        table.setFont(new Font("Arial", Font.PLAIN, 13));
-        JScrollPane scrollPane = new JScrollPane(table);
+        // Load data
+        loadCrops();
 
         panel.add(topPanel, BorderLayout.NORTH);
         panel.add(scrollPane, BorderLayout.CENTER);
@@ -248,11 +245,360 @@ public class adminDashboard extends JFrame {
         return panel;
     }
 
+    // Load crops from database
+    private void loadCrops() {
+        List<Object[]> crops = CropDAO.getAllCrops();
+        String[] columns = {"ID", "Crop Name", "Variety", "Planted", "Harvest Date",
+                           "Soil Type", "Irrigation", "Stage", "Health", "Farmer"};
+        Object[][] data = crops.toArray(new Object[0][0]);
+        cropTable.setModel(new javax.swing.table.DefaultTableModel(data, columns));
+    }
+
+    // Show Add Crop Dialog
+    private void showAddCropDialog() {
+        JDialog dialog = new JDialog(this, "Add New Crop", true);
+        dialog.setSize(500, 600);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout(10, 10));
+
+        JPanel formPanel = new JPanel(new GridLayout(9, 2, 10, 10));
+        formPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 20));
+
+        // Crop Name
+        formPanel.add(new JLabel("Crop Name:"));
+        JTextField nameField = new JTextField();
+        formPanel.add(nameField);
+
+        // Variety
+        formPanel.add(new JLabel("Variety:"));
+        JTextField varietyField = new JTextField();
+        formPanel.add(varietyField);
+
+        // Planting Date
+        formPanel.add(new JLabel("Planting Date (YYYY-MM-DD):"));
+        JTextField plantingDateField = new JTextField("2025-11-24");
+        formPanel.add(plantingDateField);
+
+        // Expected Harvest
+        formPanel.add(new JLabel("Expected Harvest (YYYY-MM-DD):"));
+        JTextField harvestDateField = new JTextField("2026-02-24");
+        formPanel.add(harvestDateField);
+
+        // Soil Type
+        formPanel.add(new JLabel("Soil Type:"));
+        String[] soilTypes = {"Loamy", "Sandy", "Clay", "Sandy Loam", "Silty"};
+        JComboBox<String> soilCombo = new JComboBox<>(soilTypes);
+        formPanel.add(soilCombo);
+
+        // Irrigation Schedule
+        formPanel.add(new JLabel("Irrigation Schedule:"));
+        String[] irrigation = {"Daily", "Twice Weekly", "Weekly", "Flooded Daily", "Drip System"};
+        JComboBox<String> irrigationCombo = new JComboBox<>(irrigation);
+        formPanel.add(irrigationCombo);
+
+        // Farmer Name
+        formPanel.add(new JLabel("Farmer Name:"));
+        JTextField farmerField = new JTextField();
+        formPanel.add(farmerField);
+
+        // Field Location
+        formPanel.add(new JLabel("Field Location:"));
+        JTextField locationField = new JTextField();
+        formPanel.add(locationField);
+
+        // Notes
+        formPanel.add(new JLabel("Notes:"));
+        JTextField notesField = new JTextField();
+        formPanel.add(notesField);
+
+        // Buttons
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        JButton saveBtn = new JButton("Save Crop");
+        saveBtn.setBackground(new Color(46, 204, 113));
+        saveBtn.setForeground(Color.WHITE);
+        saveBtn.setFocusPainted(false);
+
+        JButton cancelBtn = new JButton("Cancel");
+        cancelBtn.setBackground(new Color(108, 117, 125));
+        cancelBtn.setForeground(Color.WHITE);
+        cancelBtn.setFocusPainted(false);
+
+        saveBtn.addActionListener(e -> {
+            String name = nameField.getText();
+            String variety = varietyField.getText();
+            String plantingDate = plantingDateField.getText();
+            String harvestDate = harvestDateField.getText();
+            String soilType = (String) soilCombo.getSelectedItem();
+            String irrigationSch = (String) irrigationCombo.getSelectedItem();
+            String farmer = farmerField.getText();
+            String location = locationField.getText();
+            String notes = notesField.getText();
+
+            if (name.isEmpty() || plantingDate.isEmpty() || harvestDate.isEmpty()) {
+                JOptionPane.showMessageDialog(dialog, "Please fill required fields!", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            boolean success = CropDAO.addCrop(name, variety, plantingDate, harvestDate,
+                                             soilType, irrigationSch, farmer, location, notes);
+            if (success) {
+                JOptionPane.showMessageDialog(dialog, "Crop added successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                loadCrops();
+                dialog.dispose();
+            } else {
+                JOptionPane.showMessageDialog(dialog, "Failed to add crop!", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        cancelBtn.addActionListener(e -> dialog.dispose());
+
+        buttonPanel.add(saveBtn);
+        buttonPanel.add(cancelBtn);
+
+        dialog.add(formPanel, BorderLayout.CENTER);
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
+        dialog.setVisible(true);
+    }
+
+    // Show View/Edit Crop Dialog
+    private void showViewEditCropDialog() {
+        int selectedRow = cropTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Please select a crop to view/edit!", "Info", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        int cropId = (int) cropTable.getValueAt(selectedRow, 0);
+        Object[] crop = CropDAO.getCropById(cropId);
+
+        if (crop == null) {
+            JOptionPane.showMessageDialog(this, "Crop not found!", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        JDialog dialog = new JDialog(this, "View/Edit Crop", true);
+        dialog.setSize(550, 700);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout(10, 10));
+
+        JPanel formPanel = new JPanel(new GridLayout(11, 2, 10, 10));
+        formPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 20));
+
+        // Crop Name
+        formPanel.add(new JLabel("Crop Name:"));
+        JTextField nameField = new JTextField((String) crop[1]);
+        formPanel.add(nameField);
+
+        // Variety
+        formPanel.add(new JLabel("Variety:"));
+        JTextField varietyField = new JTextField((String) crop[2]);
+        formPanel.add(varietyField);
+
+        // Planting Date
+        formPanel.add(new JLabel("Planting Date:"));
+        JTextField plantingDateField = new JTextField((String) crop[3]);
+        formPanel.add(plantingDateField);
+
+        // Expected Harvest
+        formPanel.add(new JLabel("Expected Harvest:"));
+        JTextField harvestDateField = new JTextField((String) crop[4]);
+        formPanel.add(harvestDateField);
+
+        // Soil Type
+        formPanel.add(new JLabel("Soil Type:"));
+        String[] soilTypes = {"Loamy", "Sandy", "Clay", "Sandy Loam", "Silty"};
+        JComboBox<String> soilCombo = new JComboBox<>(soilTypes);
+        soilCombo.setSelectedItem(crop[5]);
+        formPanel.add(soilCombo);
+
+        // Irrigation
+        formPanel.add(new JLabel("Irrigation:"));
+        JTextField irrigationField = new JTextField((String) crop[6]);
+        formPanel.add(irrigationField);
+
+        // Growth Stage
+        formPanel.add(new JLabel("Growth Stage:"));
+        String[] stages = {"Planted", "Growing", "Flowering", "Harvesting", "Completed"};
+        JComboBox<String> stageCombo = new JComboBox<>(stages);
+        stageCombo.setSelectedItem(crop[7]);
+        formPanel.add(stageCombo);
+
+        // Health Status
+        formPanel.add(new JLabel("Health Status:"));
+        String[] health = {"Excellent", "Good", "Fair", "Poor", "Critical"};
+        JComboBox<String> healthCombo = new JComboBox<>(health);
+        healthCombo.setSelectedItem(crop[8]);
+        formPanel.add(healthCombo);
+
+        // Farmer Name
+        formPanel.add(new JLabel("Farmer Name:"));
+        JTextField farmerField = new JTextField((String) crop[9]);
+        formPanel.add(farmerField);
+
+        // Field Location
+        formPanel.add(new JLabel("Field Location:"));
+        JTextField locationField = new JTextField((String) crop[10]);
+        formPanel.add(locationField);
+
+        // Notes
+        formPanel.add(new JLabel("Notes:"));
+        JTextField notesField = new JTextField((String) crop[11]);
+        formPanel.add(notesField);
+
+        // Buttons
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        JButton updateBtn = new JButton("Update Crop");
+        updateBtn.setBackground(new Color(52, 152, 219));
+        updateBtn.setForeground(Color.WHITE);
+        updateBtn.setFocusPainted(false);
+
+        JButton cancelBtn = new JButton("Cancel");
+        cancelBtn.setBackground(new Color(108, 117, 125));
+        cancelBtn.setForeground(Color.WHITE);
+        cancelBtn.setFocusPainted(false);
+
+        updateBtn.addActionListener(e -> {
+            boolean success = CropDAO.updateCrop(
+                cropId,
+                nameField.getText(),
+                varietyField.getText(),
+                plantingDateField.getText(),
+                harvestDateField.getText(),
+                (String) soilCombo.getSelectedItem(),
+                irrigationField.getText(),
+                (String) stageCombo.getSelectedItem(),
+                (String) healthCombo.getSelectedItem(),
+                farmerField.getText(),
+                locationField.getText(),
+                notesField.getText()
+            );
+
+            if (success) {
+                JOptionPane.showMessageDialog(dialog, "Crop updated successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                loadCrops();
+                dialog.dispose();
+            } else {
+                JOptionPane.showMessageDialog(dialog, "Failed to update crop!", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        cancelBtn.addActionListener(e -> dialog.dispose());
+
+        buttonPanel.add(updateBtn);
+        buttonPanel.add(cancelBtn);
+
+        dialog.add(formPanel, BorderLayout.CENTER);
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
+        dialog.setVisible(true);
+    }
+
+    // Delete crop
+    private void deleteCrop() {
+        int selectedRow = cropTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Please select a crop to delete!", "Info", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        int confirm = JOptionPane.showConfirmDialog(this,
+            "Are you sure you want to delete this crop?",
+            "Confirm Delete",
+            JOptionPane.YES_NO_OPTION);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            int cropId = (int) cropTable.getValueAt(selectedRow, 0);
+            boolean success = CropDAO.deleteCrop(cropId);
+
+            if (success) {
+                JOptionPane.showMessageDialog(this, "Crop deleted successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                loadCrops();
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to delete crop!", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    // Show harvest prediction
+    private void showHarvestPrediction() {
+        List<Object[]> crops = CropDAO.getAllCrops();
+
+        if (crops.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No crops found!", "Info", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        JDialog dialog = new JDialog(this, "Harvest Prediction", true);
+        dialog.setSize(600, 400);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout(10, 10));
+
+        // Title
+        JLabel title = new JLabel("📅 Harvest Prediction for All Crops");
+        title.setFont(new Font("Arial", Font.BOLD, 16));
+        title.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        // Table
+        String[] columns = {"Crop", "Variety", "Harvest Date", "Days Until Harvest", "Status"};
+        List<Object[]> predictions = new ArrayList<>();
+
+        for (Object[] crop : crops) {
+            String harvestDate = (String) crop[4];
+            int daysUntil = CropDAO.getDaysUntilHarvest(harvestDate);
+            String status;
+
+            if (daysUntil < 0) {
+                status = "⚠️ Overdue";
+            } else if (daysUntil == 0) {
+                status = "✅ Today!";
+            } else if (daysUntil <= 7) {
+                status = "🔔 This Week";
+            } else if (daysUntil <= 30) {
+                status = "📅 This Month";
+            } else {
+                status = "⏰ Future";
+            }
+
+            predictions.add(new Object[]{
+                crop[1], // crop name
+                crop[2], // variety
+                harvestDate,
+                daysUntil + " days",
+                status
+            });
+        }
+
+        Object[][] data = predictions.toArray(new Object[0][0]);
+        JTable predictionTable = new JTable(data, columns);
+        predictionTable.setRowHeight(30);
+        predictionTable.setFont(new Font("Arial", Font.PLAIN, 13));
+        JScrollPane scrollPane = new JScrollPane(predictionTable);
+
+        // Close button
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JButton closeBtn = new JButton("Close");
+        closeBtn.setBackground(new Color(108, 117, 125));
+        closeBtn.setForeground(Color.WHITE);
+        closeBtn.setFocusPainted(false);
+        closeBtn.addActionListener(e -> dialog.dispose());
+        buttonPanel.add(closeBtn);
+
+        dialog.add(title, BorderLayout.NORTH);
+        dialog.add(scrollPane, BorderLayout.CENTER);
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
+        dialog.setVisible(true);
+    }
+
     // ========== FARMER MANAGEMENT ==========
+    private JTable farmerTable;
+    private FarmerDAO farmerDAO = new FarmerDAO();
+
     private JPanel createFarmerManagementPanel() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBackground(Color.WHITE);
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        // Initialize database table
+        farmerDAO.createTable();
 
         // Title & Buttons
         JPanel topPanel = new JPanel(new BorderLayout());
@@ -265,46 +611,35 @@ public class adminDashboard extends JFrame {
         buttonPanel.setBackground(Color.WHITE);
 
         JButton addFarmerBtn = createActionButton("Add Farmer", new Color(46, 204, 113));
-        JButton approveRegBtn = createActionButton("Approve Registration", new Color(52, 152, 219));
-        JButton manageCertBtn = createActionButton("Manage Certification", new Color(155, 89, 182));
-        JButton viewDetailsBtn = createActionButton("View Details", new Color(241, 196, 15));
+        JButton editFarmerBtn = createActionButton("Edit Farmer", new Color(52, 152, 219));
+        JButton deleteFarmerBtn = createActionButton("Delete Farmer", new Color(231, 76, 60));
+        JButton refreshBtn = createActionButton("Refresh", new Color(149, 165, 166));
 
         // Add button actions
-        addFarmerBtn.addActionListener(e ->
-                JOptionPane.showMessageDialog(this, "Add New Farmer form - Coming soon!", "Info", JOptionPane.INFORMATION_MESSAGE)
-        );
-        approveRegBtn.addActionListener(e ->
-                JOptionPane.showMessageDialog(this, "Approve Farmer Registration - Coming soon!", "Info", JOptionPane.INFORMATION_MESSAGE)
-        );
-        manageCertBtn.addActionListener(e ->
-                JOptionPane.showMessageDialog(this, "Manage Farmer Certifications - Coming soon!", "Info", JOptionPane.INFORMATION_MESSAGE)
-        );
-        viewDetailsBtn.addActionListener(e ->
-                JOptionPane.showMessageDialog(this, "View Farmer Details - Coming soon!", "Info", JOptionPane.INFORMATION_MESSAGE)
-        );
+        addFarmerBtn.addActionListener(e -> showAddFarmerDialog());
+        editFarmerBtn.addActionListener(e -> showEditFarmerDialog());
+        deleteFarmerBtn.addActionListener(e -> deleteFarmer());
+        refreshBtn.addActionListener(e -> loadFarmersData());
 
         buttonPanel.add(addFarmerBtn);
-        buttonPanel.add(approveRegBtn);
-        buttonPanel.add(manageCertBtn);
-        buttonPanel.add(viewDetailsBtn);
+        buttonPanel.add(editFarmerBtn);
+        buttonPanel.add(deleteFarmerBtn);
+        buttonPanel.add(refreshBtn);
 
         topPanel.add(title, BorderLayout.NORTH);
         topPanel.add(buttonPanel, BorderLayout.SOUTH);
 
         // Table
-        String[] columns = {"ID", "Name", "Email", "Phone", "Farm Name", "Farm Size", "Certification", "Status"};
-        Object[][] data = {
-                {1, "John Farmer", "john@farm.com", "+1234567890", "Green Valley", "50 acres", "Organic", "Approved"},
-                {2, "Mary Smith", "mary@farm.com", "+1234567891", "Sunny Acres", "35 acres", "Pending", "Approved"},
-                {3, "Bob Johnson", "bob@farm.com", "+1234567892", "River Farm", "60 acres", "Sustainable", "Approved"},
-                {4, "Alice Brown", "alice@farm.com", "+1234567893", "Hill Farm", "25 acres", "None", "Pending"},
-                {5, "Tom Wilson", "tom@farm.com", "+1234567894", "Valley Farm", "40 acres", "Organic", "Approved"}
-        };
+        String[] columns = {"ID", "Name", "Farmer ID", "Farm Size", "Certifications",
+                           "Farm Location", "Score", "Phone", "Email", "Status"};
 
-        JTable table = new JTable(data, columns);
-        table.setRowHeight(30);
-        table.setFont(new Font("Arial", Font.PLAIN, 13));
-        JScrollPane scrollPane = new JScrollPane(table);
+        farmerTable = new JTable();
+        farmerTable.setRowHeight(30);
+        farmerTable.setFont(new Font("Arial", Font.PLAIN, 13));
+        JScrollPane scrollPane = new JScrollPane(farmerTable);
+
+        // Load data from database
+        loadFarmersData();
 
         panel.add(topPanel, BorderLayout.NORTH);
         panel.add(scrollPane, BorderLayout.CENTER);
@@ -648,56 +983,282 @@ public class adminDashboard extends JFrame {
     }
 
     // ========== TRACEABILITY ==========
+    private JTable traceabilityTable;
+    private JTable checkpointsTable;
+
     private JPanel createTraceabilityPanel() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBackground(Color.WHITE);
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        // Title & Search
+        // Title & Buttons
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.setBackground(Color.WHITE);
 
         JLabel title = new JLabel("🔍 Traceability & Tracking");
         title.setFont(new Font("Arial", Font.BOLD, 20));
 
-        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        searchPanel.setBackground(Color.WHITE);
-        searchPanel.add(new JLabel("Search Batch ID:"));
-        searchPanel.add(new JTextField(20));
-        searchPanel.add(new JButton("🔍 Track"));
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        buttonPanel.setBackground(Color.WHITE);
+
+        JButton createRecordBtn = createActionButton("Create Record", new Color(46, 204, 113));
+        JButton addCheckpointBtn = createActionButton("Add Checkpoint", new Color(52, 152, 219));
+        JButton viewTimelineBtn = createActionButton("View Timeline", new Color(155, 89, 182));
+        JButton refreshBtn = createActionButton("🔄 Refresh", new Color(108, 117, 125));
+
+        // Button Actions
+        createRecordBtn.addActionListener(e -> showCreateRecordDialog());
+        addCheckpointBtn.addActionListener(e -> showAddCheckpointDialog());
+        viewTimelineBtn.addActionListener(e -> showTimelineDialog());
+        refreshBtn.addActionListener(e -> loadTraceabilityRecords());
+
+        buttonPanel.add(createRecordBtn);
+        buttonPanel.add(addCheckpointBtn);
+        buttonPanel.add(viewTimelineBtn);
+        buttonPanel.add(refreshBtn);
 
         topPanel.add(title, BorderLayout.NORTH);
-        topPanel.add(searchPanel, BorderLayout.SOUTH);
+        topPanel.add(buttonPanel, BorderLayout.SOUTH);
 
-        // Table
-        String[] columns = {"Batch ID", "Crop", "Farm", "Event", "Date", "Location", "Status"};
-        Object[][] data = {
-                {"BATCH-001", "Wheat", "Green Valley", "Harvested", "2025-11-15", "Field A", "QC Passed"},
-                {"BATCH-002", "Tomatoes", "Hill Farm", "Packaged", "2025-11-20", "Warehouse B", "Shipped"},
-                {"BATCH-003", "Rice", "River Farm", "Processing", "2025-11-18", "Mill C", "In Progress"},
-                {"BATCH-004", "Corn", "Sunny Acres", "Delivered", "2025-11-22", "Market D", "Completed"}
-        };
+        // Traceability Records Table
+        String[] columns = {"Batch ID", "Crop", "Farmer", "Created Date", "Status"};
+        traceabilityTable = new JTable(new Object[0][0], columns);
+        traceabilityTable.setRowHeight(30);
+        traceabilityTable.setFont(new Font("Arial", Font.PLAIN, 13));
+        JScrollPane scrollPane = new JScrollPane(traceabilityTable);
+        scrollPane.setBorder(BorderFactory.createTitledBorder("Traceability Records"));
 
+        // Load data
+        loadTraceabilityRecords();
+
+        panel.add(topPanel, BorderLayout.NORTH);
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+        return panel;
+    }
+
+    // Load traceability records from database
+    private void loadTraceabilityRecords() {
+        List<Object[]> records = TraceabilityDAO.getAllRecords();
+        String[] columns = {"Batch ID", "Crop", "Farmer", "Created Date", "Status"};
+        Object[][] data = records.toArray(new Object[0][0]);
+        traceabilityTable.setModel(new javax.swing.table.DefaultTableModel(data, columns));
+    }
+
+    // Show dialog to create new traceability record
+    private void showCreateRecordDialog() {
+        JDialog dialog = new JDialog(this, "Create Traceability Record", true);
+        dialog.setSize(400, 300);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout(10, 10));
+
+        JPanel formPanel = new JPanel(new GridLayout(4, 2, 10, 10));
+        formPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        // Batch ID
+        formPanel.add(new JLabel("Batch ID:"));
+        JTextField batchIdField = new JTextField();
+        formPanel.add(batchIdField);
+
+        // Crop Name
+        formPanel.add(new JLabel("Crop Name:"));
+        JTextField cropField = new JTextField();
+        formPanel.add(cropField);
+
+        // Farmer Name
+        formPanel.add(new JLabel("Farmer Name:"));
+        JTextField farmerField = new JTextField();
+        formPanel.add(farmerField);
+
+        // Date
+        formPanel.add(new JLabel("Date (YYYY-MM-DD):"));
+        JTextField dateField = new JTextField();
+        formPanel.add(dateField);
+
+        // Buttons
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        JButton createBtn = new JButton("Create");
+        createBtn.setBackground(new Color(46, 204, 113));
+        createBtn.setForeground(Color.WHITE);
+        createBtn.setFocusPainted(false);
+
+        JButton cancelBtn = new JButton("Cancel");
+        cancelBtn.setBackground(new Color(108, 117, 125));
+        cancelBtn.setForeground(Color.WHITE);
+        cancelBtn.setFocusPainted(false);
+
+        createBtn.addActionListener(e -> {
+            String batchId = batchIdField.getText();
+            String crop = cropField.getText();
+            String farmer = farmerField.getText();
+            String date = dateField.getText();
+
+            if (batchId.isEmpty() || crop.isEmpty() || farmer.isEmpty() || date.isEmpty()) {
+                JOptionPane.showMessageDialog(dialog, "Please fill all fields!", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            boolean success = TraceabilityDAO.createRecord(batchId, crop, farmer, date);
+            if (success) {
+                JOptionPane.showMessageDialog(dialog, "Record created successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                loadTraceabilityRecords();
+                dialog.dispose();
+            } else {
+                JOptionPane.showMessageDialog(dialog, "Failed to create record!", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        cancelBtn.addActionListener(e -> dialog.dispose());
+
+        buttonPanel.add(createBtn);
+        buttonPanel.add(cancelBtn);
+
+        dialog.add(formPanel, BorderLayout.CENTER);
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
+        dialog.setVisible(true);
+    }
+
+    // Show dialog to add checkpoint
+    private void showAddCheckpointDialog() {
+        JDialog dialog = new JDialog(this, "Add Checkpoint", true);
+        dialog.setSize(400, 350);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout(10, 10));
+
+        JPanel formPanel = new JPanel(new GridLayout(5, 2, 10, 10));
+        formPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        // Batch ID
+        formPanel.add(new JLabel("Batch ID:"));
+        JTextField batchIdField = new JTextField();
+        formPanel.add(batchIdField);
+
+        // Checkpoint Name
+        formPanel.add(new JLabel("Checkpoint:"));
+        String[] checkpoints = {"Planting", "Growing", "Harvesting", "Packaging", "Delivery"};
+        JComboBox<String> checkpointCombo = new JComboBox<>(checkpoints);
+        formPanel.add(checkpointCombo);
+
+        // Date
+        formPanel.add(new JLabel("Date (YYYY-MM-DD):"));
+        JTextField dateField = new JTextField();
+        formPanel.add(dateField);
+
+        // Location
+        formPanel.add(new JLabel("Location:"));
+        JTextField locationField = new JTextField();
+        formPanel.add(locationField);
+
+        // Notes
+        formPanel.add(new JLabel("Notes:"));
+        JTextField notesField = new JTextField();
+        formPanel.add(notesField);
+
+        // Buttons
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        JButton addBtn = new JButton("Add Checkpoint");
+        addBtn.setBackground(new Color(52, 152, 219));
+        addBtn.setForeground(Color.WHITE);
+        addBtn.setFocusPainted(false);
+
+        JButton cancelBtn = new JButton("Cancel");
+        cancelBtn.setBackground(new Color(108, 117, 125));
+        cancelBtn.setForeground(Color.WHITE);
+        cancelBtn.setFocusPainted(false);
+
+        addBtn.addActionListener(e -> {
+            String batchId = batchIdField.getText();
+            String checkpoint = (String) checkpointCombo.getSelectedItem();
+            String date = dateField.getText();
+            String location = locationField.getText();
+            String notes = notesField.getText();
+
+            if (batchId.isEmpty() || date.isEmpty()) {
+                JOptionPane.showMessageDialog(dialog, "Batch ID and Date are required!", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            boolean success = TraceabilityDAO.addCheckpoint(batchId, checkpoint, date, location, notes);
+            if (success) {
+                JOptionPane.showMessageDialog(dialog, "Checkpoint added successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                dialog.dispose();
+            } else {
+                JOptionPane.showMessageDialog(dialog, "Failed to add checkpoint!", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        cancelBtn.addActionListener(e -> dialog.dispose());
+
+        buttonPanel.add(addBtn);
+        buttonPanel.add(cancelBtn);
+
+        dialog.add(formPanel, BorderLayout.CENTER);
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
+        dialog.setVisible(true);
+    }
+
+    // Show timeline dialog for a specific batch
+    private void showTimelineDialog() {
+        // Get batch ID from user
+        String batchId = JOptionPane.showInputDialog(this, "Enter Batch ID:", "View Timeline", JOptionPane.QUESTION_MESSAGE);
+
+        if (batchId == null || batchId.isEmpty()) {
+            return;
+        }
+
+        // Get checkpoints for this batch
+        List<Object[]> checkpoints = TraceabilityDAO.getCheckpoints(batchId);
+
+        if (checkpoints.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No checkpoints found for batch: " + batchId, "Info", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        // Create dialog to show timeline
+        JDialog dialog = new JDialog(this, "Timeline for " + batchId, true);
+        dialog.setSize(700, 400);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout(10, 10));
+
+        // Timeline visualization
+        JPanel timelinePanel = new JPanel();
+        timelinePanel.setBackground(new Color(240, 240, 240));
+        timelinePanel.setBorder(BorderFactory.createTitledBorder("Timeline Visualization"));
+
+        StringBuilder timeline = new StringBuilder();
+        for (int i = 0; i < checkpoints.size(); i++) {
+            Object[] checkpoint = checkpoints.get(i);
+            timeline.append(checkpoint[0]); // checkpoint name
+            if (i < checkpoints.size() - 1) {
+                timeline.append(" → ");
+            }
+        }
+
+        JLabel timelineLabel = new JLabel(timeline.toString());
+        timelineLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        timelinePanel.add(timelineLabel);
+
+        // Table with checkpoint details
+        String[] columns = {"Checkpoint", "Date", "Location", "Notes"};
+        Object[][] data = checkpoints.toArray(new Object[0][0]);
         JTable table = new JTable(data, columns);
         table.setRowHeight(30);
         table.setFont(new Font("Arial", Font.PLAIN, 13));
         JScrollPane scrollPane = new JScrollPane(table);
 
-        // Trace Chain
-        JPanel traceChain = new JPanel();
-        traceChain.setBackground(new Color(240, 240, 240));
-        traceChain.setBorder(BorderFactory.createTitledBorder("Trace Chain Visualization"));
-        traceChain.setPreferredSize(new Dimension(1100, 100));
+        // Close button
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JButton closeBtn = new JButton("Close");
+        closeBtn.setBackground(new Color(108, 117, 125));
+        closeBtn.setForeground(Color.WHITE);
+        closeBtn.setFocusPainted(false);
+        closeBtn.addActionListener(e -> dialog.dispose());
+        buttonPanel.add(closeBtn);
 
-        JLabel chainLabel = new JLabel("Seed → Planted → Growing → Harvested → QC → Packaged → Shipped → Delivered");
-        chainLabel.setFont(new Font("Arial", Font.BOLD, 14));
-        traceChain.add(chainLabel);
-
-        panel.add(topPanel, BorderLayout.NORTH);
-        panel.add(scrollPane, BorderLayout.CENTER);
-        panel.add(traceChain, BorderLayout.SOUTH);
-
-        return panel;
+        dialog.add(timelinePanel, BorderLayout.NORTH);
+        dialog.add(scrollPane, BorderLayout.CENTER);
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
+        dialog.setVisible(true);
     }
 
     // ========== HELPER METHODS ==========
@@ -821,6 +1382,255 @@ public class adminDashboard extends JFrame {
         scrollPane.setBorder(BorderFactory.createTitledBorder("Recent Activity"));
 
         return scrollPane;
+    }
+
+    // ========== FARMER MANAGEMENT METHODS ==========
+
+    // Load farmers from database
+    private void loadFarmersData() {
+        List<Object[]> farmers = farmerDAO.getAllFarmers();
+        String[] columns = {"ID", "Name", "Farmer ID", "Farm Size", "Certifications",
+                           "Farm Location", "Score", "Phone", "Email", "Status"};
+
+        Object[][] data = farmers.toArray(new Object[0][]);
+        farmerTable.setModel(new javax.swing.table.DefaultTableModel(data, columns));
+    }
+
+    // Show add farmer dialog
+    private void showAddFarmerDialog() {
+        JDialog dialog = new JDialog(this, "Add New Farmer", true);
+        dialog.setSize(500, 500);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout());
+
+        JPanel formPanel = new JPanel(new GridLayout(8, 2, 10, 10));
+        formPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        formPanel.setBackground(Color.WHITE);
+
+        // Form fields
+        JTextField nameField = new JTextField();
+        JTextField farmerIdField = new JTextField();
+        JTextField farmSizeField = new JTextField();
+        JTextField certificationsField = new JTextField();
+        JTextField farmLocationField = new JTextField();
+        JTextField phoneField = new JTextField();
+        JTextField emailField = new JTextField();
+
+        formPanel.add(new JLabel("Name:"));
+        formPanel.add(nameField);
+        formPanel.add(new JLabel("Farmer ID:"));
+        formPanel.add(farmerIdField);
+        formPanel.add(new JLabel("Farm Size (e.g., 50 acres):"));
+        formPanel.add(farmSizeField);
+        formPanel.add(new JLabel("Certifications:"));
+        formPanel.add(certificationsField);
+        formPanel.add(new JLabel("Farm Location:"));
+        formPanel.add(farmLocationField);
+        formPanel.add(new JLabel("Phone:"));
+        formPanel.add(phoneField);
+        formPanel.add(new JLabel("Email:"));
+        formPanel.add(emailField);
+
+        // Buttons
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.setBackground(Color.WHITE);
+
+        JButton saveBtn = new JButton("Save");
+        saveBtn.setBackground(new Color(46, 204, 113));
+        saveBtn.setForeground(Color.WHITE);
+        saveBtn.setFocusPainted(false);
+
+        JButton cancelBtn = new JButton("Cancel");
+        cancelBtn.setBackground(new Color(149, 165, 166));
+        cancelBtn.setForeground(Color.WHITE);
+        cancelBtn.setFocusPainted(false);
+
+        saveBtn.addActionListener(e -> {
+            String name = nameField.getText().trim();
+            String farmerId = farmerIdField.getText().trim();
+            String farmSize = farmSizeField.getText().trim();
+            String certifications = certificationsField.getText().trim();
+            String farmLocation = farmLocationField.getText().trim();
+            String phone = phoneField.getText().trim();
+            String email = emailField.getText().trim();
+
+            if (name.isEmpty() || farmerId.isEmpty()) {
+                JOptionPane.showMessageDialog(dialog,
+                    "Name and Farmer ID are required!",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            boolean success = farmerDAO.addFarmer(name, farmerId, farmSize,
+                                                 certifications, farmLocation, phone, email);
+
+            if (success) {
+                JOptionPane.showMessageDialog(dialog, "Farmer added successfully!");
+                loadFarmersData();
+                dialog.dispose();
+            } else {
+                JOptionPane.showMessageDialog(dialog,
+                    "Error adding farmer. Farmer ID may already exist.",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        cancelBtn.addActionListener(e -> dialog.dispose());
+
+        buttonPanel.add(saveBtn);
+        buttonPanel.add(cancelBtn);
+
+        dialog.add(formPanel, BorderLayout.CENTER);
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
+        dialog.setVisible(true);
+    }
+
+    // Show edit farmer dialog
+    private void showEditFarmerDialog() {
+        int selectedRow = farmerTable.getSelectedRow();
+
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this,
+                "Please select a farmer to edit!",
+                "Warning",
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // Get selected farmer data
+        int id = (int) farmerTable.getValueAt(selectedRow, 0);
+        String currentName = (String) farmerTable.getValueAt(selectedRow, 1);
+        String currentFarmerId = (String) farmerTable.getValueAt(selectedRow, 2);
+        String currentFarmSize = (String) farmerTable.getValueAt(selectedRow, 3);
+        String currentCerts = (String) farmerTable.getValueAt(selectedRow, 4);
+        String currentLocation = (String) farmerTable.getValueAt(selectedRow, 5);
+        String currentPhone = (String) farmerTable.getValueAt(selectedRow, 7);
+        String currentEmail = (String) farmerTable.getValueAt(selectedRow, 8);
+
+        JDialog dialog = new JDialog(this, "Edit Farmer", true);
+        dialog.setSize(500, 500);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout());
+
+        JPanel formPanel = new JPanel(new GridLayout(8, 2, 10, 10));
+        formPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        formPanel.setBackground(Color.WHITE);
+
+        // Form fields
+        JTextField nameField = new JTextField(currentName);
+        JTextField farmerIdField = new JTextField(currentFarmerId);
+        JTextField farmSizeField = new JTextField(currentFarmSize);
+        JTextField certificationsField = new JTextField(currentCerts);
+        JTextField farmLocationField = new JTextField(currentLocation);
+        JTextField phoneField = new JTextField(currentPhone);
+        JTextField emailField = new JTextField(currentEmail);
+
+        formPanel.add(new JLabel("Name:"));
+        formPanel.add(nameField);
+        formPanel.add(new JLabel("Farmer ID:"));
+        formPanel.add(farmerIdField);
+        formPanel.add(new JLabel("Farm Size:"));
+        formPanel.add(farmSizeField);
+        formPanel.add(new JLabel("Certifications:"));
+        formPanel.add(certificationsField);
+        formPanel.add(new JLabel("Farm Location:"));
+        formPanel.add(farmLocationField);
+        formPanel.add(new JLabel("Phone:"));
+        formPanel.add(phoneField);
+        formPanel.add(new JLabel("Email:"));
+        formPanel.add(emailField);
+
+        // Buttons
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.setBackground(Color.WHITE);
+
+        JButton updateBtn = new JButton("Update");
+        updateBtn.setBackground(new Color(52, 152, 219));
+        updateBtn.setForeground(Color.WHITE);
+        updateBtn.setFocusPainted(false);
+
+        JButton cancelBtn = new JButton("Cancel");
+        cancelBtn.setBackground(new Color(149, 165, 166));
+        cancelBtn.setForeground(Color.WHITE);
+        cancelBtn.setFocusPainted(false);
+
+        updateBtn.addActionListener(e -> {
+            String name = nameField.getText().trim();
+            String farmerId = farmerIdField.getText().trim();
+            String farmSize = farmSizeField.getText().trim();
+            String certifications = certificationsField.getText().trim();
+            String farmLocation = farmLocationField.getText().trim();
+            String phone = phoneField.getText().trim();
+            String email = emailField.getText().trim();
+
+            if (name.isEmpty() || farmerId.isEmpty()) {
+                JOptionPane.showMessageDialog(dialog,
+                    "Name and Farmer ID are required!",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            boolean success = farmerDAO.updateFarmer(id, name, farmerId, farmSize,
+                                                    certifications, farmLocation, phone, email);
+
+            if (success) {
+                JOptionPane.showMessageDialog(dialog, "Farmer updated successfully!");
+                loadFarmersData();
+                dialog.dispose();
+            } else {
+                JOptionPane.showMessageDialog(dialog,
+                    "Error updating farmer.",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        cancelBtn.addActionListener(e -> dialog.dispose());
+
+        buttonPanel.add(updateBtn);
+        buttonPanel.add(cancelBtn);
+
+        dialog.add(formPanel, BorderLayout.CENTER);
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
+        dialog.setVisible(true);
+    }
+
+    // Delete farmer
+    private void deleteFarmer() {
+        int selectedRow = farmerTable.getSelectedRow();
+
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this,
+                "Please select a farmer to delete!",
+                "Warning",
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        int id = (int) farmerTable.getValueAt(selectedRow, 0);
+        String name = (String) farmerTable.getValueAt(selectedRow, 1);
+
+        int confirm = JOptionPane.showConfirmDialog(this,
+            "Are you sure you want to delete farmer: " + name + "?",
+            "Confirm Delete",
+            JOptionPane.YES_NO_OPTION);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            boolean success = farmerDAO.deleteFarmer(id);
+
+            if (success) {
+                JOptionPane.showMessageDialog(this, "Farmer deleted successfully!");
+                loadFarmersData();
+            } else {
+                JOptionPane.showMessageDialog(this,
+                    "Error deleting farmer.",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            }
+        }
     }
 
     // ========== MAIN ==========

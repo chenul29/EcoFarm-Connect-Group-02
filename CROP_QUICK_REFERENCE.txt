@@ -1,0 +1,221 @@
+╔═══════════════════════════════════════════════════════════════╗
+║     🌾 CROP MANAGEMENT SYSTEM - QUICK REFERENCE CARD         ║
+╚═══════════════════════════════════════════════════════════════╝
+
+┌───────────────────────────────────────────────────────────────┐
+│ SETUP (One-time)                                              │
+└───────────────────────────────────────────────────────────────┘
+
+1. phpMyAdmin → ecofarm database
+2. Run: database/crop_management_schema.sql
+3. ✅ Table created with 6 sample crops
+
+┌───────────────────────────────────────────────────────────────┐
+│ RUN APPLICATION                                               │
+└───────────────────────────────────────────────────────────────┘
+
+IntelliJ → Right-click adminDashboard.java → Run
+Dashboard opens → Click "🌾 Crop Management" tab
+
+┌───────────────────────────────────────────────────────────────┐
+│ 5 MAIN FEATURES                                               │
+└───────────────────────────────────────────────────────────────┘
+
+[➕ Add Crop]
+  • Fill form with crop details
+  • Select soil type (dropdown)
+  • Select irrigation schedule (dropdown)
+  • Click "Save Crop"
+
+[✏️ View/Edit]
+  • Click on crop row
+  • Click button
+  • Edit any field
+  • Update growth stage & health
+  • Click "Update Crop"
+
+[🗑️ Delete]
+  • Click on crop row
+  • Click button
+  • Confirm deletion
+
+[📅 Harvest Prediction]
+  • Click button
+  • See days until harvest
+  • View status indicators:
+    ⚠️ Overdue | ✅ Today | 🔔 This Week | 📅 This Month | ⏰ Future
+
+[🔄 Refresh]
+  • Click to reload latest data
+
+┌───────────────────────────────────────────────────────────────┐
+│ FORM FIELDS                                                   │
+└───────────────────────────────────────────────────────────────┘
+
+REQUIRED:
+  ✅ Crop Name (e.g., Wheat, Rice)
+  ✅ Planting Date (YYYY-MM-DD)
+  ✅ Expected Harvest (YYYY-MM-DD)
+
+OPTIONAL:
+  ○ Variety (e.g., Winter Wheat)
+  ○ Soil Type (dropdown)
+  ○ Irrigation Schedule (dropdown)
+  ○ Farmer Name
+  ○ Field Location
+  ○ Notes
+
+EDIT ONLY:
+  ⚙️ Growth Stage (Planted → Growing → Flowering → Harvesting → Completed)
+  ⚙️ Health Status (Excellent → Good → Fair → Poor → Critical)
+
+┌───────────────────────────────────────────────────────────────┐
+│ DROPDOWN OPTIONS                                              │
+└───────────────────────────────────────────────────────────────┘
+
+SOIL TYPE:
+  🌱 Loamy | 🌾 Sandy | 🏔️ Clay | 🌿 Sandy Loam | 💧 Silty
+
+IRRIGATION:
+  💦 Daily | 🌊 Twice Weekly | 💧 Weekly | 🌊 Flooded Daily | 💧 Drip System
+
+┌───────────────────────────────────────────────────────────────┐
+│ SAMPLE CROPS (Pre-loaded)                                     │
+└───────────────────────────────────────────────────────────────┘
+
+1. Wheat (Winter) - Growing - Excellent
+2. Corn (Sweet) - Flowering - Good
+3. Rice (Basmati) - Planted - Good
+4. Tomatoes (Cherry) - Harvesting - Excellent
+5. Potatoes (Russet) - Growing - Fair
+6. Carrots (Nantes) - Planted - Good
+
+┌───────────────────────────────────────────────────────────────┐
+│ DATE FORMAT                                                   │
+└───────────────────────────────────────────────────────────────┘
+
+Always use: YYYY-MM-DD
+
+Examples:
+  ✅ 2025-11-24 (Nov 24, 2025)
+  ✅ 2026-02-24 (Feb 24, 2026)
+  ❌ 24-11-2025 (Wrong)
+  ❌ 11/24/2025 (Wrong)
+
+┌───────────────────────────────────────────────────────────────┐
+│ QUICK TEST                                                    │
+└───────────────────────────────────────────────────────────────┘
+
+1. Click "➕ Add Crop"
+2. Enter:
+   Name: Cucumber
+   Planted: 2025-11-24
+   Harvest: 2026-01-24
+   Soil: Loamy
+   Irrigation: Daily
+3. Click "Save Crop"
+4. ✅ See it in table!
+
+┌───────────────────────────────────────────────────────────────┐
+│ KEYBOARD SHORTCUTS                                            │
+└───────────────────────────────────────────────────────────────┘
+
+• Click row + Enter = Select crop
+• Delete key (after selection) = Nothing (use Delete button)
+• Ctrl+Click = Multi-select (not used in this version)
+
+┌───────────────────────────────────────────────────────────────┐
+│ TROUBLESHOOTING                                               │
+└───────────────────────────────────────────────────────────────┘
+
+Problem: Table empty
+Solution: Run SQL script first
+
+Problem: Can't add crop
+Solution: Fill all required fields (name, both dates)
+
+Problem: Date error
+Solution: Use YYYY-MM-DD format
+
+Problem: Changes not saved
+Solution: Click "Save" or "Update" button
+
+┌───────────────────────────────────────────────────────────────┐
+│ FILES LOCATION                                                │
+└───────────────────────────────────────────────────────────────┘
+
+Database:
+  📁 database/crop_management_schema.sql
+
+Code:
+  📁 src/main/java/CropDAO.java
+  📁 src/main/java/adminDashboard.java (updated)
+
+Documentation:
+  📁 CROP_MANAGEMENT_GUIDE.txt
+
+┌───────────────────────────────────────────────────────────────┐
+│ DATABASE TABLE                                                │
+└───────────────────────────────────────────────────────────────┘
+
+Table: crops
+Columns: 14 total
+Primary Key: id (auto-increment)
+
+Main Fields:
+  • crop_name
+  • variety
+  • planting_date
+  • expected_harvest
+  • soil_type
+  • irrigation_schedule
+  • growth_stage
+  • health_status
+  • farmer_name
+  • field_location
+  • notes
+
+┌───────────────────────────────────────────────────────────────┐
+│ CODE METHODS (CropDAO.java)                                   │
+└───────────────────────────────────────────────────────────────┘
+
+addCrop() - Add new crop
+getAllCrops() - Get all crops for table
+getCropById() - Get one crop details
+updateCrop() - Update crop info
+deleteCrop() - Remove crop
+getDaysUntilHarvest() - Calculate prediction
+initializeTable() - Create table
+
+┌───────────────────────────────────────────────────────────────┐
+│ WORKFLOW EXAMPLE                                              │
+└───────────────────────────────────────────────────────────────┘
+
+Day 1: Add Wheat (Planted stage)
+Day 15: Edit → Change to Growing
+Day 60: Edit → Change to Flowering, Health = Excellent
+Day 85: Check Prediction (7 days left)
+Day 92: Edit → Change to Completed
+
+┌───────────────────────────────────────────────────────────────┐
+│ TIPS                                                          │
+└───────────────────────────────────────────────────────────────┘
+
+✅ Always click row before View/Edit or Delete
+✅ Use realistic harvest dates (30-120 days from planting)
+✅ Update growth stage regularly for accurate tracking
+✅ Add notes for important observations
+✅ Use Refresh after external database changes
+✅ Check Harvest Prediction weekly for planning
+
+┌───────────────────────────────────────────────────────────────┐
+│ STATUS: ✅ READY TO USE                                       │
+└───────────────────────────────────────────────────────────────┘
+
+All features working!
+Simple, beginner-friendly code!
+Database integrated!
+Sample data provided!
+
+Happy Farming! 🌾
+
