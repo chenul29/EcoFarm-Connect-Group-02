@@ -1,5 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 /**
  * Admin Dashboard - EcoFarm Connect
@@ -10,13 +12,19 @@ public class adminDashboard extends JFrame {
     private JTabbedPane tabbedPane;
 
     public adminDashboard(String adminName) {
+        // Set window properties
         setTitle("EcoFarm Connect - Admin Dashboard");
         setSize(1200, 800);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
+        // Create UI components
         createUI(adminName);
 
+        // Pack and display
+        pack();
+        setSize(1200, 800); // Restore size after pack
+        setLocationRelativeTo(null); // Re-center after pack
         setVisible(true);
     }
 
@@ -75,6 +83,22 @@ public class adminDashboard extends JFrame {
         logoutBtn.setForeground(Color.WHITE);
         logoutBtn.setFocusPainted(false);
         logoutBtn.setFont(new Font("Arial", Font.BOLD, 14));
+        logoutBtn.setOpaque(true);
+        logoutBtn.setBorderPainted(false);
+        logoutBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        logoutBtn.setPreferredSize(new Dimension(100, 40));
+
+        // Add logout action
+        logoutBtn.addActionListener(e -> {
+            int confirm = JOptionPane.showConfirmDialog(this,
+                    "Are you sure you want to logout?",
+                    "Confirm Logout",
+                    JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+                this.dispose();
+                SwingUtilities.invokeLater(() -> login.main(new String[]{}));
+            }
+        });
 
         header.add(leftPanel, BorderLayout.WEST);
         header.add(logoutBtn, BorderLayout.EAST);
@@ -106,12 +130,48 @@ public class adminDashboard extends JFrame {
         actionsPanel.setBackground(Color.WHITE);
         actionsPanel.setBorder(BorderFactory.createTitledBorder("Quick Actions"));
 
-        actionsPanel.add(createActionButton("➕ Add Farmer", new Color(52, 152, 219)));
-        actionsPanel.add(createActionButton("🏠 Add Farm", new Color(46, 204, 113)));
-        actionsPanel.add(createActionButton("🌱 Add Crop", new Color(155, 89, 182)));
-        actionsPanel.add(createActionButton("📦 Add Inventory", new Color(241, 196, 15)));
-        actionsPanel.add(createActionButton("📢 Announcement", new Color(230, 126, 34)));
-        actionsPanel.add(createActionButton("📊 Generate Report", new Color(52, 73, 94)));
+        JButton addFarmerBtn = createActionButton("➕ Add Farmer", new Color(52, 152, 219));
+        JButton addFarmBtn = createActionButton("🏠 Add Farm", new Color(46, 204, 113));
+        JButton addCropBtn = createActionButton("🌱 Add Crop", new Color(155, 89, 182));
+        JButton addInventoryBtn = createActionButton("📦 Add Inventory", new Color(241, 196, 15));
+        JButton announcementBtn = createActionButton("📢 Announcement", new Color(230, 126, 34));
+        JButton generateReportBtn = createActionButton("📊 Generate Report", new Color(52, 73, 94));
+
+        // Add button actions
+        addFarmerBtn.addActionListener(e -> {
+            JOptionPane.showMessageDialog(this, "Add Farmer functionality - Coming soon!", "Info", JOptionPane.INFORMATION_MESSAGE);
+            tabbedPane.setSelectedIndex(2); // Switch to Farmer Management tab
+        });
+
+        addFarmBtn.addActionListener(e -> {
+            JOptionPane.showMessageDialog(this, "Add Farm functionality - Coming soon!", "Info", JOptionPane.INFORMATION_MESSAGE);
+        });
+
+        addCropBtn.addActionListener(e -> {
+            JOptionPane.showMessageDialog(this, "Add Crop functionality - Coming soon!", "Info", JOptionPane.INFORMATION_MESSAGE);
+            tabbedPane.setSelectedIndex(1); // Switch to Crop Management tab
+        });
+
+        addInventoryBtn.addActionListener(e -> {
+            JOptionPane.showMessageDialog(this, "Add Inventory functionality - Coming soon!", "Info", JOptionPane.INFORMATION_MESSAGE);
+            tabbedPane.setSelectedIndex(3); // Switch to Inventory tab
+        });
+
+        announcementBtn.addActionListener(e -> {
+            tabbedPane.setSelectedIndex(6); // Switch to Notifications tab
+            showSendNotificationDialog("BROADCAST");
+        });
+
+        generateReportBtn.addActionListener(e -> {
+            tabbedPane.setSelectedIndex(5); // Switch to Reports tab
+        });
+
+        actionsPanel.add(addFarmerBtn);
+        actionsPanel.add(addFarmBtn);
+        actionsPanel.add(addCropBtn);
+        actionsPanel.add(addInventoryBtn);
+        actionsPanel.add(announcementBtn);
+        actionsPanel.add(generateReportBtn);
 
         JPanel topSection = new JPanel(new BorderLayout(10, 10));
         topSection.setBackground(Color.WHITE);
@@ -139,10 +199,30 @@ public class adminDashboard extends JFrame {
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         buttonPanel.setBackground(Color.WHITE);
-        buttonPanel.add(createActionButton("Add Crop", new Color(46, 204, 113)));
-        buttonPanel.add(createActionButton("Update Stage", new Color(52, 152, 219)));
-        buttonPanel.add(createActionButton("View Schedule", new Color(155, 89, 182)));
-        buttonPanel.add(createActionButton("Export Data", new Color(52, 73, 94)));
+
+        JButton addCropBtn = createActionButton("Add Crop", new Color(46, 204, 113));
+        JButton updateStageBtn = createActionButton("Update Stage", new Color(52, 152, 219));
+        JButton viewScheduleBtn = createActionButton("View Schedule", new Color(155, 89, 182));
+        JButton exportDataBtn = createActionButton("Export Data", new Color(52, 73, 94));
+
+        // Add button actions
+        addCropBtn.addActionListener(e ->
+                JOptionPane.showMessageDialog(this, "Add Crop form - Coming soon!", "Info", JOptionPane.INFORMATION_MESSAGE)
+        );
+        updateStageBtn.addActionListener(e ->
+                JOptionPane.showMessageDialog(this, "Update Crop Stage - Coming soon!", "Info", JOptionPane.INFORMATION_MESSAGE)
+        );
+        viewScheduleBtn.addActionListener(e ->
+                JOptionPane.showMessageDialog(this, "View Planting/Harvest Schedule - Coming soon!", "Info", JOptionPane.INFORMATION_MESSAGE)
+        );
+        exportDataBtn.addActionListener(e ->
+                JOptionPane.showMessageDialog(this, "Export crop data as CSV/PDF - Coming soon!", "Info", JOptionPane.INFORMATION_MESSAGE)
+        );
+
+        buttonPanel.add(addCropBtn);
+        buttonPanel.add(updateStageBtn);
+        buttonPanel.add(viewScheduleBtn);
+        buttonPanel.add(exportDataBtn);
 
         topPanel.add(title, BorderLayout.NORTH);
         topPanel.add(buttonPanel, BorderLayout.CENTER);
@@ -183,10 +263,30 @@ public class adminDashboard extends JFrame {
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         buttonPanel.setBackground(Color.WHITE);
-        buttonPanel.add(createActionButton("Add Farmer", new Color(46, 204, 113)));
-        buttonPanel.add(createActionButton("Approve Registration", new Color(52, 152, 219)));
-        buttonPanel.add(createActionButton("Manage Certification", new Color(155, 89, 182)));
-        buttonPanel.add(createActionButton("View Details", new Color(241, 196, 15)));
+
+        JButton addFarmerBtn = createActionButton("Add Farmer", new Color(46, 204, 113));
+        JButton approveRegBtn = createActionButton("Approve Registration", new Color(52, 152, 219));
+        JButton manageCertBtn = createActionButton("Manage Certification", new Color(155, 89, 182));
+        JButton viewDetailsBtn = createActionButton("View Details", new Color(241, 196, 15));
+
+        // Add button actions
+        addFarmerBtn.addActionListener(e ->
+                JOptionPane.showMessageDialog(this, "Add New Farmer form - Coming soon!", "Info", JOptionPane.INFORMATION_MESSAGE)
+        );
+        approveRegBtn.addActionListener(e ->
+                JOptionPane.showMessageDialog(this, "Approve Farmer Registration - Coming soon!", "Info", JOptionPane.INFORMATION_MESSAGE)
+        );
+        manageCertBtn.addActionListener(e ->
+                JOptionPane.showMessageDialog(this, "Manage Farmer Certifications - Coming soon!", "Info", JOptionPane.INFORMATION_MESSAGE)
+        );
+        viewDetailsBtn.addActionListener(e ->
+                JOptionPane.showMessageDialog(this, "View Farmer Details - Coming soon!", "Info", JOptionPane.INFORMATION_MESSAGE)
+        );
+
+        buttonPanel.add(addFarmerBtn);
+        buttonPanel.add(approveRegBtn);
+        buttonPanel.add(manageCertBtn);
+        buttonPanel.add(viewDetailsBtn);
 
         topPanel.add(title, BorderLayout.NORTH);
         topPanel.add(buttonPanel, BorderLayout.SOUTH);
@@ -227,10 +327,32 @@ public class adminDashboard extends JFrame {
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         buttonPanel.setBackground(Color.WHITE);
-        buttonPanel.add(createActionButton("Add Item", new Color(46, 204, 113)));
-        buttonPanel.add(createActionButton("Update Stock", new Color(52, 152, 219)));
-        buttonPanel.add(createActionButton("Approve Restock", new Color(155, 89, 182)));
-        buttonPanel.add(createActionButton("Low Stock Alert", new Color(231, 76, 60)));
+
+        JButton addItemBtn = createActionButton("Add Item", new Color(46, 204, 113));
+        JButton updateStockBtn = createActionButton("Update Stock", new Color(52, 152, 219));
+        JButton approveRestockBtn = createActionButton("Approve Restock", new Color(155, 89, 182));
+        JButton lowStockAlertBtn = createActionButton("Low Stock Alert", new Color(231, 76, 60));
+
+        // Add button actions
+        addItemBtn.addActionListener(e ->
+                JOptionPane.showMessageDialog(this, "Add Inventory Item - Coming soon!", "Info", JOptionPane.INFORMATION_MESSAGE)
+        );
+        updateStockBtn.addActionListener(e ->
+                JOptionPane.showMessageDialog(this, "Update Stock Levels - Coming soon!", "Info", JOptionPane.INFORMATION_MESSAGE)
+        );
+        approveRestockBtn.addActionListener(e ->
+                JOptionPane.showMessageDialog(this, "Approve Restock Request - Coming soon!", "Info", JOptionPane.INFORMATION_MESSAGE)
+        );
+        lowStockAlertBtn.addActionListener(e -> {
+            // Send low stock notification to farmers
+            tabbedPane.setSelectedIndex(6); // Switch to Notifications tab
+            JOptionPane.showMessageDialog(this, "Low Stock Alert System - Switch to Notifications tab to send alerts", "Info", JOptionPane.INFORMATION_MESSAGE);
+        });
+
+        buttonPanel.add(addItemBtn);
+        buttonPanel.add(updateStockBtn);
+        buttonPanel.add(approveRestockBtn);
+        buttonPanel.add(lowStockAlertBtn);
 
         topPanel.add(title, BorderLayout.NORTH);
         topPanel.add(buttonPanel, BorderLayout.SOUTH);
@@ -271,9 +393,25 @@ public class adminDashboard extends JFrame {
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         buttonPanel.setBackground(Color.WHITE);
-        buttonPanel.add(createActionButton("Approve Product", new Color(46, 204, 113)));
-        buttonPanel.add(createActionButton("Update Pricing", new Color(52, 152, 219)));
-        buttonPanel.add(createActionButton("Manage Orders", new Color(155, 89, 182)));
+
+        JButton approveProductBtn = createActionButton("Approve Product", new Color(46, 204, 113));
+        JButton updatePricingBtn = createActionButton("Update Pricing", new Color(52, 152, 219));
+        JButton manageOrdersBtn = createActionButton("Manage Orders", new Color(155, 89, 182));
+
+        // Add button actions
+        approveProductBtn.addActionListener(e ->
+                JOptionPane.showMessageDialog(this, "Approve Product Listing - Coming soon!", "Info", JOptionPane.INFORMATION_MESSAGE)
+        );
+        updatePricingBtn.addActionListener(e ->
+                JOptionPane.showMessageDialog(this, "Update Product Pricing - Coming soon!", "Info", JOptionPane.INFORMATION_MESSAGE)
+        );
+        manageOrdersBtn.addActionListener(e ->
+                JOptionPane.showMessageDialog(this, "Manage Marketplace Orders - Coming soon!", "Info", JOptionPane.INFORMATION_MESSAGE)
+        );
+
+        buttonPanel.add(approveProductBtn);
+        buttonPanel.add(updatePricingBtn);
+        buttonPanel.add(manageOrdersBtn);
 
         topPanel.add(title, BorderLayout.NORTH);
         topPanel.add(buttonPanel, BorderLayout.SOUTH);
@@ -326,9 +464,25 @@ public class adminDashboard extends JFrame {
         JPanel exportPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         exportPanel.setBackground(Color.WHITE);
         exportPanel.setBorder(BorderFactory.createTitledBorder("Export Options"));
-        exportPanel.add(createActionButton("📄 PDF", new Color(231, 76, 60)));
-        exportPanel.add(createActionButton("📊 CSV", new Color(46, 204, 113)));
-        exportPanel.add(createActionButton("📈 Excel", new Color(52, 152, 219)));
+
+        JButton pdfBtn = createActionButton("📄 PDF", new Color(231, 76, 60));
+        JButton csvBtn = createActionButton("📊 CSV", new Color(46, 204, 113));
+        JButton excelBtn = createActionButton("📈 Excel", new Color(52, 152, 219));
+
+        // Add export actions
+        pdfBtn.addActionListener(e ->
+                JOptionPane.showMessageDialog(this, "Export to PDF - Coming soon!", "Export", JOptionPane.INFORMATION_MESSAGE)
+        );
+        csvBtn.addActionListener(e ->
+                JOptionPane.showMessageDialog(this, "Export to CSV - Coming soon!", "Export", JOptionPane.INFORMATION_MESSAGE)
+        );
+        excelBtn.addActionListener(e ->
+                JOptionPane.showMessageDialog(this, "Export to Excel - Coming soon!", "Export", JOptionPane.INFORMATION_MESSAGE)
+        );
+
+        exportPanel.add(pdfBtn);
+        exportPanel.add(csvBtn);
+        exportPanel.add(excelBtn);
 
         JPanel topSection = new JPanel(new BorderLayout());
         topSection.setBackground(Color.WHITE);
@@ -356,9 +510,16 @@ public class adminDashboard extends JFrame {
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         buttonPanel.setBackground(Color.WHITE);
-        buttonPanel.add(createActionButton("Send to Farmers", new Color(46, 204, 113)));
-        buttonPanel.add(createActionButton("Send to Consumers", new Color(52, 152, 219)));
-        buttonPanel.add(createActionButton("Broadcast Alert", new Color(231, 76, 60)));
+
+        JButton sendToFarmersBtn = createActionButton("Send to Farmers", new Color(46, 204, 113));
+        JButton sendToConsumersBtn = createActionButton("Send to Consumers", new Color(52, 152, 219));
+        JButton broadcastAlertBtn = createActionButton("Broadcast Alert", new Color(231, 76, 60));
+        JButton refreshBtn = createActionButton("🔄 Refresh", new Color(108, 117, 125));
+
+        buttonPanel.add(sendToFarmersBtn);
+        buttonPanel.add(sendToConsumersBtn);
+        buttonPanel.add(broadcastAlertBtn);
+        buttonPanel.add(refreshBtn);
 
         topPanel.add(title, BorderLayout.NORTH);
         topPanel.add(buttonPanel, BorderLayout.SOUTH);
@@ -377,10 +538,113 @@ public class adminDashboard extends JFrame {
         table.setFont(new Font("Arial", Font.PLAIN, 13));
         JScrollPane scrollPane = new JScrollPane(table);
 
+        // Button Actions
+        sendToFarmersBtn.addActionListener(e -> showSendNotificationDialog("FARMER"));
+        sendToConsumersBtn.addActionListener(e -> showSendNotificationDialog("CONSUMER"));
+        broadcastAlertBtn.addActionListener(e -> showSendNotificationDialog("BROADCAST"));
+        refreshBtn.addActionListener(e -> {
+            JOptionPane.showMessageDialog(panel, "Notifications refreshed!", "Success", JOptionPane.INFORMATION_MESSAGE);
+        });
+
         panel.add(topPanel, BorderLayout.NORTH);
         panel.add(scrollPane, BorderLayout.CENTER);
 
         return panel;
+    }
+
+    // Dialog to send notifications
+    private void showSendNotificationDialog(String recipientType) {
+        JDialog dialog = new JDialog(this, "Send Notification", true);
+        dialog.setSize(500, 400);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout(10, 10));
+
+        JPanel formPanel = new JPanel(new GridLayout(5, 2, 10, 10));
+        formPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        // Recipient Type
+        formPanel.add(new JLabel("Recipient Type:"));
+        JTextField recipientField = new JTextField(recipientType);
+        recipientField.setEditable(false);
+        formPanel.add(recipientField);
+
+        // Notification Type
+        formPanel.add(new JLabel("Notification Type:"));
+        String[] types = {"ALERT", "REMINDER", "WARNING", "INFO", "SYSTEM"};
+        JComboBox<String> typeCombo = new JComboBox<>(types);
+        formPanel.add(typeCombo);
+
+        // Title
+        formPanel.add(new JLabel("Title:"));
+        JTextField titleField = new JTextField();
+        formPanel.add(titleField);
+
+        // Message
+        formPanel.add(new JLabel("Message:"));
+        JTextArea messageArea = new JTextArea(3, 20);
+        messageArea.setLineWrap(true);
+        messageArea.setWrapStyleWord(true);
+        JScrollPane messageScroll = new JScrollPane(messageArea);
+        formPanel.add(messageScroll);
+
+        // User ID (for testing - send to specific farmer)
+        formPanel.add(new JLabel("Farmer User ID:"));
+        JTextField userIdField = new JTextField("1"); // Default to user 1
+        formPanel.add(userIdField);
+
+        // Buttons
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        JButton sendBtn = new JButton("Send Notification");
+        sendBtn.setBackground(new Color(46, 204, 113));
+        sendBtn.setForeground(Color.WHITE);
+        sendBtn.setFocusPainted(false);
+        sendBtn.setOpaque(true);
+        sendBtn.setBorderPainted(false);
+        sendBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        JButton cancelBtn = new JButton("Cancel");
+        cancelBtn.setBackground(new Color(108, 117, 125));
+        cancelBtn.setForeground(Color.WHITE);
+        cancelBtn.setFocusPainted(false);
+        cancelBtn.setOpaque(true);
+        cancelBtn.setBorderPainted(false);
+        cancelBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        sendBtn.addActionListener(e -> {
+            String type = (String) typeCombo.getSelectedItem();
+            String title = titleField.getText();
+            String message = messageArea.getText();
+            String userIdStr = userIdField.getText();
+
+            if (title.isEmpty() || message.isEmpty()) {
+                JOptionPane.showMessageDialog(dialog, "Please fill in all fields!", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            try {
+                int userId = Integer.parseInt(userIdStr);
+                boolean success = NotificationDAO.addNotification(userId, type, title, message);
+
+                if (success) {
+                    JOptionPane.showMessageDialog(dialog, "Notification sent successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                    dialog.dispose();
+                } else {
+                    JOptionPane.showMessageDialog(dialog, "Failed to send notification!", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(dialog, "Invalid User ID!", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        cancelBtn.addActionListener(e -> dialog.dispose());
+
+        buttonPanel.add(sendBtn);
+        buttonPanel.add(cancelBtn);
+
+        dialog.add(formPanel, BorderLayout.CENTER);
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
+
+        dialog.setVisible(true);
     }
 
     // ========== TRACEABILITY ==========
@@ -442,6 +706,7 @@ public class adminDashboard extends JFrame {
         JPanel card = new JPanel(new BorderLayout());
         card.setBackground(color);
         card.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        card.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         JLabel titleLabel = new JLabel(title);
         titleLabel.setFont(new Font("Arial", Font.PLAIN, 12));
@@ -454,6 +719,24 @@ public class adminDashboard extends JFrame {
         card.add(titleLabel, BorderLayout.NORTH);
         card.add(valueLabel, BorderLayout.CENTER);
 
+        // Add hover effect
+        card.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent evt) {
+                JOptionPane.showMessageDialog(card,
+                        "Viewing details for: " + title + "\nThis feature is coming soon!",
+                        "Details",
+                        JOptionPane.INFORMATION_MESSAGE);
+            }
+
+            public void mouseEntered(MouseEvent evt) {
+                card.setBackground(color.darker());
+            }
+
+            public void mouseExited(MouseEvent evt) {
+                card.setBackground(color);
+            }
+        });
+
         return card;
     }
 
@@ -464,6 +747,23 @@ public class adminDashboard extends JFrame {
         button.setFocusPainted(false);
         button.setFont(new Font("Arial", Font.BOLD, 12));
         button.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
+        button.setOpaque(true);
+        button.setBorderPainted(false);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        // Add hover effect
+        button.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                button.setBackground(color.brighter());
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                button.setBackground(color);
+            }
+        });
+
         return button;
     }
 
@@ -471,6 +771,7 @@ public class adminDashboard extends JFrame {
         JPanel card = new JPanel(new BorderLayout());
         card.setBackground(color);
         card.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        card.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         JLabel iconLabel = new JLabel(icon, SwingConstants.CENTER);
         iconLabel.setFont(new Font("Arial", Font.PLAIN, 40));
@@ -481,6 +782,24 @@ public class adminDashboard extends JFrame {
 
         card.add(iconLabel, BorderLayout.CENTER);
         card.add(titleLabel, BorderLayout.SOUTH);
+
+        // Add click functionality
+        card.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent evt) {
+                JOptionPane.showMessageDialog(card,
+                        "Generating " + title + "...\nThis feature is coming soon!",
+                        "Generate Report",
+                        JOptionPane.INFORMATION_MESSAGE);
+            }
+
+            public void mouseEntered(MouseEvent evt) {
+                card.setBackground(color.darker());
+            }
+
+            public void mouseExited(MouseEvent evt) {
+                card.setBackground(color);
+            }
+        });
 
         return card;
     }
@@ -506,6 +825,13 @@ public class adminDashboard extends JFrame {
 
     // ========== MAIN ==========
     public static void main(String[] args) {
+        // Set Look and Feel
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         SwingUtilities.invokeLater(() -> {
             new adminDashboard("Admin User");
         });

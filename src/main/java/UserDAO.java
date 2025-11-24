@@ -59,6 +59,7 @@ public class UserDAO {
     public static void initializeDatabase() {
         createDatabase();
         createUsersTable();
+        NotificationDAO.createNotificationsTable(); // Create notifications table
         addSampleUsers();
     }
 
