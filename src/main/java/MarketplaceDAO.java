@@ -63,8 +63,8 @@ public class MarketplaceDAO {
     // Add new product
     public static boolean addProduct(String productName, String farmerName, double price,
                                     int quantity, String unit, String category, String description) {
-        String sql = "INSERT INTO marketplace_products (product_name, farmer_name, price, quantity, unit, category, description) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO marketplace_products (product_name, farmer_name, price, quantity, unit, category, description, approval, status) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, 'Approved', 'Active')";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
