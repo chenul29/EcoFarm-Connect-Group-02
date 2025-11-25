@@ -1949,18 +1949,18 @@ public class adminDashboard extends JFrame {
         card.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
         card.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        JLabel titleLabel = new JLabel(title);
+        JLabel valueLabel = new JLabel(value, SwingConstants.CENTER);
+        valueLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        valueLabel.setForeground(Color.WHITE);
+
+        JLabel titleLabel = new JLabel(title, SwingConstants.CENTER);
         titleLabel.setFont(new Font("Arial", Font.PLAIN, 12));
         titleLabel.setForeground(Color.WHITE);
 
-        JLabel valueLabel = new JLabel(value);
-        valueLabel.setFont(new Font("Arial", Font.BOLD, 28));
-        valueLabel.setForeground(Color.WHITE);
-
-        card.add(titleLabel, BorderLayout.NORTH);
         card.add(valueLabel, BorderLayout.CENTER);
+        card.add(titleLabel, BorderLayout.SOUTH);
 
-        // Add hover effect
+        // Add hover effect for dashboard cards only
         card.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent evt) {
                 JOptionPane.showMessageDialog(card,
@@ -2027,10 +2027,7 @@ public class adminDashboard extends JFrame {
         // Add click functionality
         card.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent evt) {
-                JOptionPane.showMessageDialog(card,
-                        "Generating " + title + "...\nThis feature is coming soon!",
-                        "Generate Report",
-                        JOptionPane.INFORMATION_MESSAGE);
+                showReportDialog(title);
             }
 
             public void mouseEntered(MouseEvent evt) {
@@ -2043,6 +2040,718 @@ public class adminDashboard extends JFrame {
         });
 
         return card;
+    }
+
+    // Show report dialog with demo data and graphs
+    private void showReportDialog(String reportType) {
+        JDialog dialog = new JDialog(this, reportType, true);
+        dialog.setSize(900, 600);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout(10, 10));
+
+        JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        mainPanel.setBackground(Color.WHITE);
+
+        // Title
+        JLabel titleLabel = new JLabel(reportType, SwingConstants.CENTER);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 20, 10));
+
+        // Create report content based on type
+        JPanel contentPanel = new JPanel(new BorderLayout(10, 10));
+        contentPanel.setBackground(Color.WHITE);
+
+        if (reportType.contains("Crop Growth")) {
+            contentPanel.add(createCropGrowthReport(), BorderLayout.CENTER);
+        } else if (reportType.contains("Farmer Performance")) {
+            contentPanel.add(createFarmerPerformanceReport(), BorderLayout.CENTER);
+        } else if (reportType.contains("Sustainability")) {
+            contentPanel.add(createSustainabilityReport(), BorderLayout.CENTER);
+        } else if (reportType.contains("Inventory Trends")) {
+            contentPanel.add(createInventoryTrendsReport(), BorderLayout.CENTER);
+        } else if (reportType.contains("Sales Analytics")) {
+            contentPanel.add(createSalesAnalyticsReport(), BorderLayout.CENTER);
+        } else if (reportType.contains("Marketplace Stats")) {
+            contentPanel.add(createMarketplaceStatsReport(), BorderLayout.CENTER);
+        } else if (reportType.contains("Financial")) {
+            contentPanel.add(createFinancialReport(), BorderLayout.CENTER);
+        } else {
+            JLabel label = new JLabel("Report content coming soon!", SwingConstants.CENTER);
+            label.setFont(new Font("Arial", Font.PLAIN, 18));
+            contentPanel.add(label, BorderLayout.CENTER);
+        }
+
+        // Close button
+        JButton closeBtn = new JButton("Close");
+        closeBtn.setBackground(new Color(220, 53, 69));
+        closeBtn.setForeground(Color.WHITE);
+        closeBtn.setFocusPainted(false);
+        closeBtn.setFont(new Font("Arial", Font.BOLD, 14));
+        closeBtn.addActionListener(e -> dialog.dispose());
+
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        buttonPanel.setBackground(Color.WHITE);
+        buttonPanel.add(closeBtn);
+
+        mainPanel.add(titleLabel, BorderLayout.NORTH);
+        mainPanel.add(contentPanel, BorderLayout.CENTER);
+        mainPanel.add(buttonPanel, BorderLayout.SOUTH);
+
+        dialog.add(mainPanel);
+        dialog.setVisible(true);
+    }
+
+    // Crop Growth Report
+    private JPanel createCropGrowthReport() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBackground(Color.WHITE);
+
+        // Summary stats
+        JPanel statsPanel = new JPanel(new GridLayout(1, 4, 10, 10));
+        statsPanel.setBackground(Color.WHITE);
+        statsPanel.add(createStatCard("Total Crops", "145", new Color(52, 152, 219)));
+        statsPanel.add(createStatCard("Growing", "89", new Color(46, 204, 113)));
+        statsPanel.add(createStatCard("Ready to Harvest", "34", new Color(241, 196, 15)));
+        statsPanel.add(createStatCard("Harvested", "22", new Color(155, 89, 182)));
+
+        // Graph area
+        JPanel graphPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                drawCropGrowthGraph(g);
+            }
+        };
+        graphPanel.setBackground(Color.WHITE);
+        graphPanel.setBorder(BorderFactory.createTitledBorder("Crop Growth Over Time"));
+        graphPanel.setPreferredSize(new Dimension(800, 300));
+
+        // Data table
+        String[] columns = {"Crop Name", "Stage", "Days Growing", "Expected Harvest", "Health Status"};
+        Object[][] data = {
+            {"Tomatoes", "Flowering", "45", "15 days", "Excellent"},
+            {"Carrots", "Vegetative", "30", "60 days", "Good"},
+            {"Lettuce", "Ready", "60", "Ready Now", "Excellent"},
+            {"Corn", "Seedling", "15", "90 days", "Good"},
+            {"Potatoes", "Tuber Formation", "70", "20 days", "Fair"}
+        };
+        JTable table = new JTable(data, columns);
+        table.setRowHeight(25);
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setBorder(BorderFactory.createTitledBorder("Crop Details"));
+
+        panel.add(statsPanel, BorderLayout.NORTH);
+        panel.add(graphPanel, BorderLayout.CENTER);
+        panel.add(scrollPane, BorderLayout.SOUTH);
+
+        return panel;
+    }
+
+    // Farmer Performance Report
+    private JPanel createFarmerPerformanceReport() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBackground(Color.WHITE);
+
+        // Summary stats
+        JPanel statsPanel = new JPanel(new GridLayout(1, 4, 10, 10));
+        statsPanel.setBackground(Color.WHITE);
+        statsPanel.add(createStatCard("Total Farmers", "48", new Color(52, 152, 219)));
+        statsPanel.add(createStatCard("Active Farms", "42", new Color(46, 204, 113)));
+        statsPanel.add(createStatCard("Avg Score", "8.5/10", new Color(241, 196, 15)));
+        statsPanel.add(createStatCard("Top Performer", "John D.", new Color(155, 89, 182)));
+
+        // Graph area
+        JPanel graphPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                drawFarmerPerformanceGraph(g);
+            }
+        };
+        graphPanel.setBackground(Color.WHITE);
+        graphPanel.setBorder(BorderFactory.createTitledBorder("Farmer Performance Comparison"));
+        graphPanel.setPreferredSize(new Dimension(800, 300));
+
+        // Data table
+        String[] columns = {"Farmer Name", "Total Crops", "Harvests", "Revenue", "Score"};
+        Object[][] data = {
+            {"John Doe", "25", "18", "$12,500", "9.2"},
+            {"Jane Smith", "18", "15", "$9,800", "8.7"},
+            {"Bob Wilson", "22", "16", "$11,200", "8.5"},
+            {"Mary Johnson", "15", "12", "$8,400", "8.1"},
+            {"Tom Brown", "20", "14", "$10,100", "7.9"}
+        };
+        JTable table = new JTable(data, columns);
+        table.setRowHeight(25);
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setBorder(BorderFactory.createTitledBorder("Farmer Rankings"));
+
+        panel.add(statsPanel, BorderLayout.NORTH);
+        panel.add(graphPanel, BorderLayout.CENTER);
+        panel.add(scrollPane, BorderLayout.SOUTH);
+
+        return panel;
+    }
+
+    // Sustainability Report
+    private JPanel createSustainabilityReport() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBackground(Color.WHITE);
+
+        // Summary stats
+        JPanel statsPanel = new JPanel(new GridLayout(1, 4, 10, 10));
+        statsPanel.setBackground(Color.WHITE);
+        statsPanel.add(createStatCard("Carbon Reduced", "2.5 tons", new Color(46, 204, 113)));
+        statsPanel.add(createStatCard("Water Saved", "15,000 L", new Color(52, 152, 219)));
+        statsPanel.add(createStatCard("Soil Health", "Good", new Color(155, 89, 182)));
+        statsPanel.add(createStatCard("Organic %", "78%", new Color(241, 196, 15)));
+
+        // Graph area
+        JPanel graphPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                drawSustainabilityGraph(g);
+            }
+        };
+        graphPanel.setBackground(Color.WHITE);
+        graphPanel.setBorder(BorderFactory.createTitledBorder("Sustainability Metrics"));
+        graphPanel.setPreferredSize(new Dimension(800, 350));
+
+        panel.add(statsPanel, BorderLayout.NORTH);
+        panel.add(graphPanel, BorderLayout.CENTER);
+
+        return panel;
+    }
+
+    // Inventory Trends Report
+    private JPanel createInventoryTrendsReport() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBackground(Color.WHITE);
+
+        // Summary stats
+        JPanel statsPanel = new JPanel(new GridLayout(1, 4, 10, 10));
+        statsPanel.setBackground(Color.WHITE);
+        statsPanel.add(createStatCard("Total Items", "156", new Color(52, 152, 219)));
+        statsPanel.add(createStatCard("In Stock", "134", new Color(46, 204, 113)));
+        statsPanel.add(createStatCard("Low Stock", "18", new Color(241, 196, 15)));
+        statsPanel.add(createStatCard("Out of Stock", "4", new Color(231, 76, 60)));
+
+        // Graph area
+        JPanel graphPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                drawInventoryTrendsGraph(g);
+            }
+        };
+        graphPanel.setBackground(Color.WHITE);
+        graphPanel.setBorder(BorderFactory.createTitledBorder("Inventory Levels Over Time"));
+        graphPanel.setPreferredSize(new Dimension(800, 300));
+
+        // Data table
+        String[] columns = {"Item Name", "Category", "Current Stock", "Status", "Last Restocked"};
+        Object[][] data = {
+            {"Seeds - Tomato", "Seeds", "450", "In Stock", "2025-11-20"},
+            {"Fertilizer - Organic", "Fertilizer", "120 kg", "In Stock", "2025-11-18"},
+            {"Tools - Hoe", "Tools", "25", "In Stock", "2025-11-15"},
+            {"Seeds - Carrot", "Seeds", "180", "Low Stock", "2025-11-10"},
+            {"Pesticide - Natural", "Pesticide", "5 L", "Low Stock", "2025-11-05"}
+        };
+        JTable table = new JTable(data, columns);
+        table.setRowHeight(25);
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setBorder(BorderFactory.createTitledBorder("Inventory Details"));
+
+        panel.add(statsPanel, BorderLayout.NORTH);
+        panel.add(graphPanel, BorderLayout.CENTER);
+        panel.add(scrollPane, BorderLayout.SOUTH);
+
+        return panel;
+    }
+
+    // Sales Analytics Report
+    private JPanel createSalesAnalyticsReport() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBackground(Color.WHITE);
+
+        // Summary stats
+        JPanel statsPanel = new JPanel(new GridLayout(1, 4, 10, 10));
+        statsPanel.setBackground(Color.WHITE);
+        statsPanel.add(createStatCard("Total Sales", "$45,600", new Color(46, 204, 113)));
+        statsPanel.add(createStatCard("Orders", "234", new Color(52, 152, 219)));
+        statsPanel.add(createStatCard("Avg Order", "$195", new Color(241, 196, 15)));
+        statsPanel.add(createStatCard("Growth", "+23%", new Color(155, 89, 182)));
+
+        // Graph area
+        JPanel graphPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                drawSalesGraph(g);
+            }
+        };
+        graphPanel.setBackground(Color.WHITE);
+        graphPanel.setBorder(BorderFactory.createTitledBorder("Monthly Sales Trend"));
+        graphPanel.setPreferredSize(new Dimension(800, 300));
+
+        // Data table
+        String[] columns = {"Product", "Units Sold", "Revenue", "Profit", "Trend"};
+        Object[][] data = {
+            {"Organic Tomatoes", "450 kg", "$2,250", "$1,125", "↑ 15%"},
+            {"Fresh Carrots", "380 kg", "$1,520", "$760", "↑ 8%"},
+            {"Lettuce", "290 kg", "$1,450", "$725", "↓ 2%"},
+            {"Potatoes", "520 kg", "$1,820", "$910", "↑ 12%"},
+            {"Corn", "310 kg", "$1,550", "$775", "↑ 5%"}
+        };
+        JTable table = new JTable(data, columns);
+        table.setRowHeight(25);
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setBorder(BorderFactory.createTitledBorder("Top Products"));
+
+        panel.add(statsPanel, BorderLayout.NORTH);
+        panel.add(graphPanel, BorderLayout.CENTER);
+        panel.add(scrollPane, BorderLayout.SOUTH);
+
+        return panel;
+    }
+
+    // Marketplace Stats Report
+    private JPanel createMarketplaceStatsReport() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBackground(Color.WHITE);
+
+        // Summary stats
+        JPanel statsPanel = new JPanel(new GridLayout(1, 4, 10, 10));
+        statsPanel.setBackground(Color.WHITE);
+        statsPanel.add(createStatCard("Active Listings", "87", new Color(52, 152, 219)));
+        statsPanel.add(createStatCard("Total Views", "3,456", new Color(46, 204, 113)));
+        statsPanel.add(createStatCard("Conversions", "12.5%", new Color(241, 196, 15)));
+        statsPanel.add(createStatCard("Revenue", "$45,600", new Color(155, 89, 182)));
+
+        // Graph area
+        JPanel graphPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                drawMarketplaceGraph(g);
+            }
+        };
+        graphPanel.setBackground(Color.WHITE);
+        graphPanel.setBorder(BorderFactory.createTitledBorder("Marketplace Activity"));
+        graphPanel.setPreferredSize(new Dimension(800, 350));
+
+        panel.add(statsPanel, BorderLayout.NORTH);
+        panel.add(graphPanel, BorderLayout.CENTER);
+
+        return panel;
+    }
+
+    // Financial Report
+    private JPanel createFinancialReport() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBackground(Color.WHITE);
+
+        // Summary stats
+        JPanel statsPanel = new JPanel(new GridLayout(1, 4, 10, 10));
+        statsPanel.setBackground(Color.WHITE);
+        statsPanel.add(createStatCard("Revenue", "$67,890", new Color(46, 204, 113)));
+        statsPanel.add(createStatCard("Expenses", "$32,450", new Color(231, 76, 60)));
+        statsPanel.add(createStatCard("Profit", "$35,440", new Color(52, 152, 219)));
+        statsPanel.add(createStatCard("Margin", "52.2%", new Color(155, 89, 182)));
+
+        // Graph area
+        JPanel graphPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                drawFinancialGraph(g);
+            }
+        };
+        graphPanel.setBackground(Color.WHITE);
+        graphPanel.setBorder(BorderFactory.createTitledBorder("Financial Overview"));
+        graphPanel.setPreferredSize(new Dimension(800, 300));
+
+        // Data table
+        String[] columns = {"Category", "Amount", "Percentage", "Change"};
+        Object[][] data = {
+            {"Sales Revenue", "$67,890", "100%", "+18%"},
+            {"Operating Costs", "$22,340", "32.9%", "+5%"},
+            {"Labor Costs", "$8,110", "11.9%", "+3%"},
+            {"Material Costs", "$2,000", "2.9%", "-2%"},
+            {"Net Profit", "$35,440", "52.2%", "+28%"}
+        };
+        JTable table = new JTable(data, columns);
+        table.setRowHeight(25);
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setBorder(BorderFactory.createTitledBorder("Financial Breakdown"));
+
+        panel.add(statsPanel, BorderLayout.NORTH);
+        panel.add(graphPanel, BorderLayout.CENTER);
+        panel.add(scrollPane, BorderLayout.SOUTH);
+
+        return panel;
+    }
+    // Draw graph methods
+    private void drawCropGrowthGraph(Graphics g) {
+        Graphics2D g2 = (Graphics2D) g;
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        int width = 750;
+        int height = 250;
+        int padding = 40;
+
+        // Draw axes
+        g2.setColor(Color.BLACK);
+        g2.drawLine(padding, height - padding, width, height - padding); // X-axis
+        g2.drawLine(padding, padding, padding, height - padding); // Y-axis
+
+        // Labels
+        g2.setFont(new Font("Arial", Font.PLAIN, 10));
+        String[] months = {"Jan", "Feb", "Mar", "Apr", "May", "Jun"};
+        for (int i = 0; i < months.length; i++) {
+            int x = padding + (i * (width - 2 * padding) / 5);
+            g2.drawString(months[i], x - 10, height - padding + 20);
+        }
+
+        // Draw line graph
+        int[] yValues = {180, 150, 120, 100, 80, 70};
+        g2.setColor(new Color(52, 152, 219));
+        g2.setStroke(new BasicStroke(3));
+
+        for (int i = 0; i < yValues.length - 1; i++) {
+            int x1 = padding + (i * (width - 2 * padding) / 5);
+            int y1 = height - padding - yValues[i];
+            int x2 = padding + ((i + 1) * (width - 2 * padding) / 5);
+            int y2 = height - padding - yValues[i + 1];
+            g2.drawLine(x1, y1, x2, y2);
+
+            // Draw points
+            g2.fillOval(x1 - 4, y1 - 4, 8, 8);
+        }
+        g2.fillOval(padding + (5 * (width - 2 * padding) / 5) - 4, height - padding - yValues[5] - 4, 8, 8);
+    }
+
+    private void drawFarmerPerformanceGraph(Graphics g) {
+        Graphics2D g2 = (Graphics2D) g;
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        int width = 750;
+        int height = 250;
+        int padding = 40;
+
+        // Draw axes
+        g2.setColor(Color.BLACK);
+        g2.drawLine(padding, height - padding, width, height - padding);
+
+        // Bar chart
+        String[] farmers = {"John", "Jane", "Bob", "Mary", "Tom"};
+        int[] scores = {92, 87, 85, 81, 79};
+        Color[] colors = {
+            new Color(46, 204, 113),
+            new Color(52, 152, 219),
+            new Color(155, 89, 182),
+            new Color(241, 196, 15),
+            new Color(230, 126, 34)
+        };
+
+        int barWidth = (width - 2 * padding) / (farmers.length * 2);
+
+        for (int i = 0; i < farmers.length; i++) {
+            int x = padding + (i * 2 * barWidth) + barWidth / 2;
+            int barHeight = scores[i] * 2;
+            int y = height - padding - barHeight;
+
+            g2.setColor(colors[i]);
+            g2.fillRect(x, y, barWidth, barHeight);
+
+            g2.setColor(Color.BLACK);
+            g2.setFont(new Font("Arial", Font.PLAIN, 10));
+            g2.drawString(farmers[i], x, height - padding + 15);
+            g2.drawString(scores[i] + "", x + 5, y - 5);
+        }
+    }
+
+    private void drawSustainabilityGraph(Graphics g) {
+        Graphics2D g2 = (Graphics2D) g;
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        int width = 750;
+        int height = 300;
+        int centerX = width / 2;
+        int centerY = height / 2;
+        int radius = 100;
+
+        // Pie chart
+        String[] labels = {"Carbon Reduction", "Water Conservation", "Soil Health", "Organic Farming"};
+        int[] values = {30, 25, 25, 20};
+        Color[] colors = {
+            new Color(46, 204, 113),
+            new Color(52, 152, 219),
+            new Color(155, 89, 182),
+            new Color(241, 196, 15)
+        };
+
+        int startAngle = 0;
+        for (int i = 0; i < values.length; i++) {
+            int arcAngle = (int) (values[i] * 3.6);
+            g2.setColor(colors[i]);
+            g2.fillArc(centerX - radius, centerY - radius, radius * 2, radius * 2, startAngle, arcAngle);
+            startAngle += arcAngle;
+        }
+
+        // Legend
+        int legendX = centerX + radius + 50;
+        int legendY = centerY - radius;
+        g2.setFont(new Font("Arial", Font.PLAIN, 12));
+        for (int i = 0; i < labels.length; i++) {
+            g2.setColor(colors[i]);
+            g2.fillRect(legendX, legendY + (i * 25), 15, 15);
+            g2.setColor(Color.BLACK);
+            g2.drawString(labels[i] + " (" + values[i] + "%)", legendX + 20, legendY + (i * 25) + 12);
+        }
+    }
+
+    private void drawInventoryTrendsGraph(Graphics g) {
+        Graphics2D g2 = (Graphics2D) g;
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        int width = 750;
+        int height = 250;
+        int padding = 40;
+
+        // Draw axes
+        g2.setColor(Color.BLACK);
+        g2.drawLine(padding, height - padding, width, height - padding);
+        g2.drawLine(padding, padding, padding, height - padding);
+
+        // Multi-line graph
+        String[] months = {"Jan", "Feb", "Mar", "Apr", "May", "Jun"};
+        int[][] data = {
+            {120, 135, 145, 150, 155, 156}, // Total items
+            {100, 110, 120, 128, 132, 134}, // In stock
+            {15, 18, 20, 18, 19, 18}        // Low stock
+        };
+        Color[] lineColors = {
+            new Color(52, 152, 219),
+            new Color(46, 204, 113),
+            new Color(241, 196, 15)
+        };
+        String[] lineLabels = {"Total Items", "In Stock", "Low Stock"};
+
+        // Draw labels
+        g2.setFont(new Font("Arial", Font.PLAIN, 10));
+        for (int i = 0; i < months.length; i++) {
+            int x = padding + (i * (width - 2 * padding) / 5);
+            g2.drawString(months[i], x - 10, height - padding + 20);
+        }
+
+        // Draw lines
+        for (int line = 0; line < data.length; line++) {
+            g2.setColor(lineColors[line]);
+            g2.setStroke(new BasicStroke(2));
+
+            for (int i = 0; i < data[line].length - 1; i++) {
+                int x1 = padding + (i * (width - 2 * padding) / 5);
+                int y1 = height - padding - data[line][i];
+                int x2 = padding + ((i + 1) * (width - 2 * padding) / 5);
+                int y2 = height - padding - data[line][i + 1];
+                g2.drawLine(x1, y1, x2, y2);
+            }
+        }
+
+        // Legend
+        int legendX = width - 150;
+        int legendY = padding + 20;
+        for (int i = 0; i < lineLabels.length; i++) {
+            g2.setColor(lineColors[i]);
+            g2.setStroke(new BasicStroke(3));
+            g2.drawLine(legendX, legendY + (i * 20), legendX + 30, legendY + (i * 20));
+            g2.setColor(Color.BLACK);
+            g2.setFont(new Font("Arial", Font.PLAIN, 10));
+            g2.drawString(lineLabels[i], legendX + 35, legendY + (i * 20) + 5);
+        }
+    }
+
+    private void drawSalesGraph(Graphics g) {
+        Graphics2D g2 = (Graphics2D) g;
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        int width = 750;
+        int height = 250;
+        int padding = 40;
+
+        // Draw axes
+        g2.setColor(Color.BLACK);
+        g2.drawLine(padding, height - padding, width, height - padding);
+        g2.drawLine(padding, padding, padding, height - padding);
+
+        // Area chart
+        String[] months = {"Jan", "Feb", "Mar", "Apr", "May", "Jun"};
+        int[] sales = {120, 135, 145, 165, 155, 180};
+
+        // Labels
+        g2.setFont(new Font("Arial", Font.PLAIN, 10));
+        for (int i = 0; i < months.length; i++) {
+            int x = padding + (i * (width - 2 * padding) / 5);
+            g2.drawString(months[i], x - 10, height - padding + 20);
+        }
+
+        // Draw filled area
+        int[] xPoints = new int[sales.length + 2];
+        int[] yPoints = new int[sales.length + 2];
+
+        xPoints[0] = padding;
+        yPoints[0] = height - padding;
+
+        for (int i = 0; i < sales.length; i++) {
+            xPoints[i + 1] = padding + (i * (width - 2 * padding) / 5);
+            yPoints[i + 1] = height - padding - sales[i];
+        }
+
+        xPoints[sales.length + 1] = padding + (5 * (width - 2 * padding) / 5);
+        yPoints[sales.length + 1] = height - padding;
+
+        g2.setColor(new Color(46, 204, 113, 100));
+        g2.fillPolygon(xPoints, yPoints, sales.length + 2);
+
+        // Draw line
+        g2.setColor(new Color(46, 204, 113));
+        g2.setStroke(new BasicStroke(3));
+        for (int i = 0; i < sales.length - 1; i++) {
+            int x1 = padding + (i * (width - 2 * padding) / 5);
+            int y1 = height - padding - sales[i];
+            int x2 = padding + ((i + 1) * (width - 2 * padding) / 5);
+            int y2 = height - padding - sales[i + 1];
+            g2.drawLine(x1, y1, x2, y2);
+            g2.fillOval(x1 - 4, y1 - 4, 8, 8);
+        }
+        g2.fillOval(xPoints[sales.length] - 4, yPoints[sales.length] - 4, 8, 8);
+    }
+
+    private void drawMarketplaceGraph(Graphics g) {
+        Graphics2D g2 = (Graphics2D) g;
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        int width = 750;
+        int height = 300;
+        int padding = 40;
+
+        // Draw grouped bar chart
+        String[] categories = {"Views", "Clicks", "Orders", "Revenue"};
+        int[][] data = {
+            {3456, 2890, 3120}, // Views (scaled down)
+            {890, 750, 920},     // Clicks (scaled down)
+            {234, 198, 256},     // Orders
+            {456, 380, 490}      // Revenue (in hundreds)
+        };
+        Color[] barColors = {
+            new Color(52, 152, 219),
+            new Color(46, 204, 113),
+            new Color(155, 89, 182)
+        };
+        String[] periods = {"Last Month", "This Month", "Projected"};
+
+        int groupWidth = (width - 2 * padding) / categories.length;
+        int barWidth = groupWidth / 4;
+
+        // Draw axes
+        g2.setColor(Color.BLACK);
+        g2.drawLine(padding, height - padding, width, height - padding);
+
+        // Draw bars
+        for (int i = 0; i < categories.length; i++) {
+            for (int j = 0; j < 3; j++) {
+                int x = padding + (i * groupWidth) + (j * barWidth) + barWidth / 4;
+                int barHeight = data[i][j] / 20; // Scale down
+                int y = height - padding - barHeight;
+
+                g2.setColor(barColors[j]);
+                g2.fillRect(x, y, barWidth, barHeight);
+            }
+
+            // Category label
+            g2.setColor(Color.BLACK);
+            g2.setFont(new Font("Arial", Font.PLAIN, 10));
+            g2.drawString(categories[i], padding + (i * groupWidth) + groupWidth / 4, height - padding + 15);
+        }
+
+        // Legend
+        int legendX = width - 180;
+        int legendY = padding + 20;
+        for (int i = 0; i < periods.length; i++) {
+            g2.setColor(barColors[i]);
+            g2.fillRect(legendX, legendY + (i * 20), 15, 15);
+            g2.setColor(Color.BLACK);
+            g2.drawString(periods[i], legendX + 20, legendY + (i * 20) + 12);
+        }
+    }
+
+    private void drawFinancialGraph(Graphics g) {
+        Graphics2D g2 = (Graphics2D) g;
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        int width = 750;
+        int height = 250;
+        int padding = 40;
+
+        // Draw axes
+        g2.setColor(Color.BLACK);
+        g2.drawLine(padding, height - padding, width, height - padding);
+        g2.drawLine(padding, padding, padding, height - padding);
+
+        // Dual-line graph (Revenue & Profit)
+        String[] months = {"Jan", "Feb", "Mar", "Apr", "May", "Jun"};
+        int[] revenue = {85, 95, 110, 125, 135, 150};
+        int[] profit = {40, 48, 55, 63, 68, 75};
+
+        // Labels
+        g2.setFont(new Font("Arial", Font.PLAIN, 10));
+        for (int i = 0; i < months.length; i++) {
+            int x = padding + (i * (width - 2 * padding) / 5);
+            g2.drawString(months[i], x - 10, height - padding + 20);
+        }
+
+        // Draw revenue line
+        g2.setColor(new Color(46, 204, 113));
+        g2.setStroke(new BasicStroke(3));
+        for (int i = 0; i < revenue.length - 1; i++) {
+            int x1 = padding + (i * (width - 2 * padding) / 5);
+            int y1 = height - padding - revenue[i];
+            int x2 = padding + ((i + 1) * (width - 2 * padding) / 5);
+            int y2 = height - padding - revenue[i + 1];
+            g2.drawLine(x1, y1, x2, y2);
+            g2.fillOval(x1 - 4, y1 - 4, 8, 8);
+        }
+        g2.fillOval(padding + (5 * (width - 2 * padding) / 5) - 4, height - padding - revenue[5] - 4, 8, 8);
+
+        // Draw profit line
+        g2.setColor(new Color(52, 152, 219));
+        for (int i = 0; i < profit.length - 1; i++) {
+            int x1 = padding + (i * (width - 2 * padding) / 5);
+            int y1 = height - padding - profit[i];
+            int x2 = padding + ((i + 1) * (width - 2 * padding) / 5);
+            int y2 = height - padding - profit[i + 1];
+            g2.drawLine(x1, y1, x2, y2);
+            g2.fillOval(x1 - 4, y1 - 4, 8, 8);
+        }
+        g2.fillOval(padding + (5 * (width - 2 * padding) / 5) - 4, height - padding - profit[5] - 4, 8, 8);
+
+        // Legend
+        int legendX = width - 150;
+        int legendY = padding + 20;
+        g2.setColor(new Color(46, 204, 113));
+        g2.setStroke(new BasicStroke(3));
+        g2.drawLine(legendX, legendY, legendX + 30, legendY);
+        g2.setColor(Color.BLACK);
+        g2.drawString("Revenue", legendX + 35, legendY + 5);
+
+        g2.setColor(new Color(52, 152, 219));
+        g2.setStroke(new BasicStroke(3));
+        g2.drawLine(legendX, legendY + 20, legendX + 30, legendY + 20);
+        g2.setColor(Color.BLACK);
+        g2.drawString("Profit", legendX + 35, legendY + 25);
     }
 
     private JScrollPane createRecentActivityTable() {
