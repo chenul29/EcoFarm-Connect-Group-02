@@ -7,51 +7,48 @@ public class FarmerDAO {
     // Create farmers table
     public void createTable() {
         String sql = "CREATE TABLE IF NOT EXISTS farmers (" +
-                "id INT AUTO_INCREMENT PRIMARY KEY," +
-                "name VARCHAR(100) NOT NULL," +
-                "farmer_id VARCHAR(50) UNIQUE NOT NULL," +
-                "farm_size VARCHAR(50)," +
-                "certifications VARCHAR(100)," +
-                "farm_location VARCHAR(200)," +
-                "sustainability_score INT DEFAULT 0," +
-                "phone VARCHAR(20)," +
-                "email VARCHAR(100)," +
-                "status VARCHAR(20) DEFAULT 'Active'," +
-                "created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP)";
+                     "id INT AUTO_INCREMENT PRIMARY KEY, " +
+                     "name VARCHAR(100) NOT NULL, " +
+                     "farmer_id VARCHAR(50) UNIQUE NOT NULL, " +
+                     "farm_size VARCHAR(50), " +
+                     "certifications TEXT, " +
+                     "farm_location VARCHAR(200), " +
+                     "phone VARCHAR(20), " +
+                     "email VARCHAR(100), " +
+                     "sustainability_score INT DEFAULT 0, " +
+                     "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)";
 
         try (Connection conn = DatabaseConnection.getConnection();
              Statement stmt = conn.createStatement()) {
             stmt.execute(sql);
-            System.out.println("Farmers table created!");
-        } catch (SQLException e) {
-            e.printStackTrace();
+            System.out.println("Farmers table created or already exists.");
+        } catch (Exception e) {
+            System.out.println("Error creating table: " + e.getMessage());
         }
     }
 
     // Add new farmer
     public boolean addFarmer(String name, String farmerId, String farmSize,
-                            String certifications, String farmLocation,
-                            String phone, String email) {
-        String sql = "INSERT INTO farmers (name, farmer_id, farm_size, certifications, " +
-                    "farm_location, phone, email, sustainability_score) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                            String certifications, String farmLocation, String phone, String email) {
+        String sql = "INSERT INTO farmers (name, farmer_id, farm_size, certifications, farm_location, phone, email) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            pstmt.setString(1, name);
-            pstmt.setString(2, farmerId);
-            pstmt.setString(3, farmSize);
-            pstmt.setString(4, certifications);
-            pstmt.setString(5, farmLocation);
-            pstmt.setString(6, phone);
-            pstmt.setString(7, email);
-            pstmt.setInt(8, calculateSustainabilityScore(certifications, farmSize));
+            stmt.setString(1, name);
+            stmt.setString(2, farmerId);
+            stmt.setString(3, farmSize);
+            stmt.setString(4, certifications);
+            stmt.setString(5, farmLocation);
+            stmt.setString(6, phone);
+            stmt.setString(7, email);
 
-            pstmt.executeUpdate();
-            return true;
+            int result = stmt.executeUpdate();
+            return result > 0;
 
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            System.out.println("Error adding farmer: " + e.getMessage());
             return false;
         }
     }
@@ -59,8 +56,8 @@ public class FarmerDAO {
     // Get all farmers
     public List<Object[]> getAllFarmers() {
         List<Object[]> farmers = new ArrayList<>();
-        String sql = "SELECT id, name, farmer_id, farm_size, certifications, " +
-                    "farm_location, sustainability_score, phone, email, status FROM farmers";
+        String sql = "SELECT id, name, farmer_id, farm_size, certifications, farm_location, phone, email, sustainability_score " +
+                     "FROM farmers ORDER BY id DESC";
 
         try (Connection conn = DatabaseConnection.getConnection();
              Statement stmt = conn.createStatement();
@@ -74,16 +71,15 @@ public class FarmerDAO {
                     rs.getString("farm_size"),
                     rs.getString("certifications"),
                     rs.getString("farm_location"),
-                    rs.getInt("sustainability_score"),
                     rs.getString("phone"),
                     rs.getString("email"),
-                    rs.getString("status")
+                    rs.getInt("sustainability_score")
                 };
                 farmers.add(farmer);
             }
 
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            System.out.println("Error getting farmers: " + e.getMessage());
         }
 
         return farmers;
@@ -91,29 +87,27 @@ public class FarmerDAO {
 
     // Update farmer
     public boolean updateFarmer(int id, String name, String farmerId, String farmSize,
-                               String certifications, String farmLocation,
-                               String phone, String email) {
+                               String certifications, String farmLocation, String phone, String email) {
         String sql = "UPDATE farmers SET name=?, farmer_id=?, farm_size=?, certifications=?, " +
-                    "farm_location=?, phone=?, email=?, sustainability_score=? WHERE id=?";
+                     "farm_location=?, phone=?, email=? WHERE id=?";
 
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            pstmt.setString(1, name);
-            pstmt.setString(2, farmerId);
-            pstmt.setString(3, farmSize);
-            pstmt.setString(4, certifications);
-            pstmt.setString(5, farmLocation);
-            pstmt.setString(6, phone);
-            pstmt.setString(7, email);
-            pstmt.setInt(8, calculateSustainabilityScore(certifications, farmSize));
-            pstmt.setInt(9, id);
+            stmt.setString(1, name);
+            stmt.setString(2, farmerId);
+            stmt.setString(3, farmSize);
+            stmt.setString(4, certifications);
+            stmt.setString(5, farmLocation);
+            stmt.setString(6, phone);
+            stmt.setString(7, email);
+            stmt.setInt(8, id);
 
-            pstmt.executeUpdate();
-            return true;
+            int result = stmt.executeUpdate();
+            return result > 0;
 
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            System.out.println("Error updating farmer: " + e.getMessage());
             return false;
         }
     }
@@ -123,49 +117,16 @@ public class FarmerDAO {
         String sql = "DELETE FROM farmers WHERE id=?";
 
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            pstmt.setInt(1, id);
-            pstmt.executeUpdate();
-            return true;
+            stmt.setInt(1, id);
+            int result = stmt.executeUpdate();
+            return result > 0;
 
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            System.out.println("Error deleting farmer: " + e.getMessage());
             return false;
         }
-    }
-
-    // Calculate sustainability score (simple calculation)
-    private int calculateSustainabilityScore(String certifications, String farmSize) {
-        int score = 50; // Base score
-
-        // Add points for certifications
-        if (certifications != null) {
-            if (certifications.toLowerCase().contains("organic")) {
-                score += 20;
-            }
-            if (certifications.toLowerCase().contains("sustainable")) {
-                score += 15;
-            }
-        }
-
-        // Add points based on farm size (smaller farms get more points for sustainability)
-        if (farmSize != null) {
-            try {
-                int size = Integer.parseInt(farmSize.replaceAll("[^0-9]", ""));
-                if (size < 30) {
-                    score += 15;
-                } else if (size < 50) {
-                    score += 10;
-                } else {
-                    score += 5;
-                }
-            } catch (NumberFormatException e) {
-                score += 5;
-            }
-        }
-
-        return Math.min(score, 100); // Cap at 100
     }
 }
 

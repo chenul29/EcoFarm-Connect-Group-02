@@ -12,8 +12,11 @@ import java.util.List;
 public class adminDashboard extends JFrame {
 
     private JTabbedPane tabbedPane;
+    private FarmerDAO farmerDAO;
 
     public adminDashboard(String adminName) {
+        // Initialize DAO
+        farmerDAO = new FarmerDAO();
         // Set window properties
         setTitle("EcoFarm Connect - Admin Dashboard");
         setSize(1200, 800);
@@ -590,7 +593,6 @@ public class adminDashboard extends JFrame {
 
     // ========== FARMER MANAGEMENT ==========
     private JTable farmerTable;
-    private FarmerDAO farmerDAO = new FarmerDAO();
 
     private JPanel createFarmerManagementPanel() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
@@ -956,18 +958,31 @@ public class adminDashboard extends JFrame {
                 return;
             }
 
-            try {
-                int userId = Integer.parseInt(userIdStr);
-                boolean success = NotificationDAO.addNotification(userId, type, title, message);
+            boolean success = false;
 
-                if (success) {
-                    JOptionPane.showMessageDialog(dialog, "Notification sent successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-                    dialog.dispose();
-                } else {
-                    JOptionPane.showMessageDialog(dialog, "Failed to send notification!", "Error", JOptionPane.ERROR_MESSAGE);
+            if ("BROADCAST".equals(recipientType)) {
+                // Send to all farmers
+                success = FarmerNotificationDAO.broadcastToAllFarmers(title, message, type, "Admin");
+            } else if ("FARMER".equals(recipientType)) {
+                // Send to specific farmer
+                try {
+                    int userId = Integer.parseInt(userIdStr);
+                    success = FarmerNotificationDAO.addNotification(userId, title, message, type, "Admin");
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(dialog, "Invalid User ID!", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
                 }
-            } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(dialog, "Invalid User ID!", "Error", JOptionPane.ERROR_MESSAGE);
+            } else {
+                // For CONSUMER, use old method or skip
+                JOptionPane.showMessageDialog(dialog, "Consumer notifications coming soon!", "Info", JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+
+            if (success) {
+                JOptionPane.showMessageDialog(dialog, "Notification sent successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                dialog.dispose();
+            } else {
+                JOptionPane.showMessageDialog(dialog, "Failed to send notification!", "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
 
