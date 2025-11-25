@@ -650,10 +650,15 @@ public class adminDashboard extends JFrame {
     }
 
     // ========== INVENTORY ==========
+    private JTable inventoryTable;
+
     private JPanel createInventoryPanel() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBackground(Color.WHITE);
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        // Initialize database table
+        InventoryDAO.createAdminInventoryTable();
 
         // Title & Buttons
         JPanel topPanel = new JPanel(new BorderLayout());
@@ -666,48 +671,40 @@ public class adminDashboard extends JFrame {
         buttonPanel.setBackground(Color.WHITE);
 
         JButton addItemBtn = createActionButton("Add Item", new Color(46, 204, 113));
-        JButton updateStockBtn = createActionButton("Update Stock", new Color(52, 152, 219));
-        JButton approveRestockBtn = createActionButton("Approve Restock", new Color(155, 89, 182));
-        JButton lowStockAlertBtn = createActionButton("Low Stock Alert", new Color(231, 76, 60));
+        JButton editItemBtn = createActionButton("Edit Item", new Color(52, 152, 219));
+        JButton deleteItemBtn = createActionButton("Delete Item", new Color(231, 76, 60));
+        JButton updateStockBtn = createActionButton("Update Stock", new Color(155, 89, 182));
+        JButton lowStockBtn = createActionButton("Low Stock Alert", new Color(241, 196, 15));
+        JButton refreshBtn = createActionButton("🔄 Refresh", new Color(108, 117, 125));
 
         // Add button actions
-        addItemBtn.addActionListener(e ->
-                JOptionPane.showMessageDialog(this, "Add Inventory Item - Coming soon!", "Info", JOptionPane.INFORMATION_MESSAGE)
-        );
-        updateStockBtn.addActionListener(e ->
-                JOptionPane.showMessageDialog(this, "Update Stock Levels - Coming soon!", "Info", JOptionPane.INFORMATION_MESSAGE)
-        );
-        approveRestockBtn.addActionListener(e ->
-                JOptionPane.showMessageDialog(this, "Approve Restock Request - Coming soon!", "Info", JOptionPane.INFORMATION_MESSAGE)
-        );
-        lowStockAlertBtn.addActionListener(e -> {
-            // Send low stock notification to farmers
-            tabbedPane.setSelectedIndex(6); // Switch to Notifications tab
-            JOptionPane.showMessageDialog(this, "Low Stock Alert System - Switch to Notifications tab to send alerts", "Info", JOptionPane.INFORMATION_MESSAGE);
-        });
+        addItemBtn.addActionListener(e -> showAddInventoryDialog());
+        editItemBtn.addActionListener(e -> showEditInventoryDialog());
+        deleteItemBtn.addActionListener(e -> deleteInventoryItem());
+        updateStockBtn.addActionListener(e -> showUpdateStockDialog());
+        lowStockBtn.addActionListener(e -> showLowStockAlert());
+        refreshBtn.addActionListener(e -> loadInventoryData());
 
         buttonPanel.add(addItemBtn);
+        buttonPanel.add(editItemBtn);
+        buttonPanel.add(deleteItemBtn);
         buttonPanel.add(updateStockBtn);
-        buttonPanel.add(approveRestockBtn);
-        buttonPanel.add(lowStockAlertBtn);
+        buttonPanel.add(lowStockBtn);
+        buttonPanel.add(refreshBtn);
 
         topPanel.add(title, BorderLayout.NORTH);
         topPanel.add(buttonPanel, BorderLayout.SOUTH);
 
         // Table
         String[] columns = {"ID", "Item Name", "Category", "Current Stock", "Min Stock", "Unit", "Status", "Last Updated"};
-        Object[][] data = {
-                {1, "NPK Fertilizer", "Fertilizers", "250", "100", "kg", "In Stock", "2025-11-20"},
-                {2, "Organic Pesticide", "Pesticides", "45", "50", "L", "Low Stock", "2025-11-18"},
-                {3, "Wheat Seeds", "Seeds", "500", "200", "kg", "In Stock", "2025-11-15"},
-                {4, "Irrigation Pipes", "Equipment", "120", "50", "m", "In Stock", "2025-10-30"},
-                {5, "Tractor Fuel", "Fuel", "200", "100", "L", "In Stock", "2025-11-22"}
-        };
+        inventoryTable = new JTable();
+        inventoryTable.setRowHeight(30);
+        inventoryTable.setFont(new Font("Arial", Font.PLAIN, 13));
+        inventoryTable.getTableHeader().setFont(new Font("Arial", Font.BOLD, 12));
+        JScrollPane scrollPane = new JScrollPane(inventoryTable);
 
-        JTable table = new JTable(data, columns);
-        table.setRowHeight(30);
-        table.setFont(new Font("Arial", Font.PLAIN, 13));
-        JScrollPane scrollPane = new JScrollPane(table);
+        // Load data from database
+        loadInventoryData();
 
         panel.add(topPanel, BorderLayout.NORTH);
         panel.add(scrollPane, BorderLayout.CENTER);
@@ -715,11 +712,387 @@ public class adminDashboard extends JFrame {
         return panel;
     }
 
+    // Load inventory data from database
+    private void loadInventoryData() {
+        List<Object[]> items = InventoryDAO.getAllInventory();
+        String[] columns = {"ID", "Item Name", "Category", "Current Stock", "Min Stock", "Unit", "Status", "Last Updated"};
+        Object[][] data = items.toArray(new Object[0][0]);
+        inventoryTable.setModel(new javax.swing.table.DefaultTableModel(data, columns));
+    }
+
+    // Show add inventory dialog
+    private void showAddInventoryDialog() {
+        JDialog dialog = new JDialog(this, "Add Inventory Item", true);
+        dialog.setSize(500, 500);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout(10, 10));
+
+        JPanel formPanel = new JPanel(new GridLayout(7, 2, 10, 10));
+        formPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 20));
+
+        // Item Name
+        formPanel.add(new JLabel("Item Name:"));
+        JTextField nameField = new JTextField();
+        formPanel.add(nameField);
+
+        // Category
+        formPanel.add(new JLabel("Category:"));
+        String[] categories = {"Fertilizers", "Seeds", "Pesticides", "Equipment", "Tools", "Fuel", "Other"};
+        JComboBox<String> categoryCombo = new JComboBox<>(categories);
+        formPanel.add(categoryCombo);
+
+        // Current Stock
+        formPanel.add(new JLabel("Current Stock:"));
+        JTextField stockField = new JTextField("0");
+        formPanel.add(stockField);
+
+        // Min Stock
+        formPanel.add(new JLabel("Min Stock (Alert Level):"));
+        JTextField minStockField = new JTextField("0");
+        formPanel.add(minStockField);
+
+        // Unit
+        formPanel.add(new JLabel("Unit:"));
+        String[] units = {"kg", "L", "pcs", "packets", "m", "tons"};
+        JComboBox<String> unitCombo = new JComboBox<>(units);
+        formPanel.add(unitCombo);
+
+        // Supplier
+        formPanel.add(new JLabel("Supplier:"));
+        JTextField supplierField = new JTextField();
+        formPanel.add(supplierField);
+
+        // Price
+        formPanel.add(new JLabel("Price per Unit:"));
+        JTextField priceField = new JTextField("0.00");
+        formPanel.add(priceField);
+
+        // Buttons
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        JButton saveBtn = new JButton("Save Item");
+        saveBtn.setBackground(new Color(46, 204, 113));
+        saveBtn.setForeground(Color.WHITE);
+        saveBtn.setFocusPainted(false);
+
+        JButton cancelBtn = new JButton("Cancel");
+        cancelBtn.setBackground(new Color(108, 117, 125));
+        cancelBtn.setForeground(Color.WHITE);
+        cancelBtn.setFocusPainted(false);
+
+        saveBtn.addActionListener(e -> {
+            try {
+                String name = nameField.getText().trim();
+                String category = (String) categoryCombo.getSelectedItem();
+                int currentStock = Integer.parseInt(stockField.getText());
+                int minStock = Integer.parseInt(minStockField.getText());
+                String unit = (String) unitCombo.getSelectedItem();
+                String supplier = supplierField.getText().trim();
+                double price = Double.parseDouble(priceField.getText());
+
+                if (name.isEmpty()) {
+                    JOptionPane.showMessageDialog(dialog, "Item name is required!", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                boolean success = InventoryDAO.addInventoryItem(name, category, currentStock, minStock, unit, supplier, price);
+                if (success) {
+                    JOptionPane.showMessageDialog(dialog, "Inventory item added successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                    loadInventoryData();
+                    dialog.dispose();
+                } else {
+                    JOptionPane.showMessageDialog(dialog, "Failed to add item!", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(dialog, "Please enter valid numbers for stock and price!", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        cancelBtn.addActionListener(e -> dialog.dispose());
+
+        buttonPanel.add(saveBtn);
+        buttonPanel.add(cancelBtn);
+
+        dialog.add(formPanel, BorderLayout.CENTER);
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
+        dialog.setVisible(true);
+    }
+
+    // Show edit inventory dialog
+    private void showEditInventoryDialog() {
+        int selectedRow = inventoryTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Please select an item to edit!", "Info", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        int itemId = (int) inventoryTable.getValueAt(selectedRow, 0);
+        Object[] item = InventoryDAO.getInventoryItemById(itemId);
+
+        if (item == null) {
+            JOptionPane.showMessageDialog(this, "Item not found!", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        JDialog dialog = new JDialog(this, "Edit Inventory Item", true);
+        dialog.setSize(500, 500);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout(10, 10));
+
+        JPanel formPanel = new JPanel(new GridLayout(7, 2, 10, 10));
+        formPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 20));
+
+        // Item Name
+        formPanel.add(new JLabel("Item Name:"));
+        JTextField nameField = new JTextField((String) item[1]);
+        formPanel.add(nameField);
+
+        // Category
+        formPanel.add(new JLabel("Category:"));
+        String[] categories = {"Fertilizers", "Seeds", "Pesticides", "Equipment", "Tools", "Fuel", "Other"};
+        JComboBox<String> categoryCombo = new JComboBox<>(categories);
+        categoryCombo.setSelectedItem(item[2]);
+        formPanel.add(categoryCombo);
+
+        // Current Stock
+        formPanel.add(new JLabel("Current Stock:"));
+        JTextField stockField = new JTextField(String.valueOf(item[3]));
+        formPanel.add(stockField);
+
+        // Min Stock
+        formPanel.add(new JLabel("Min Stock:"));
+        JTextField minStockField = new JTextField(String.valueOf(item[4]));
+        formPanel.add(minStockField);
+
+        // Unit
+        formPanel.add(new JLabel("Unit:"));
+        String[] units = {"kg", "L", "pcs", "packets", "m", "tons"};
+        JComboBox<String> unitCombo = new JComboBox<>(units);
+        unitCombo.setSelectedItem(item[5]);
+        formPanel.add(unitCombo);
+
+        // Supplier
+        formPanel.add(new JLabel("Supplier:"));
+        JTextField supplierField = new JTextField((String) item[8]);
+        formPanel.add(supplierField);
+
+        // Price
+        formPanel.add(new JLabel("Price:"));
+        JTextField priceField = new JTextField(String.valueOf(item[7]));
+        formPanel.add(priceField);
+
+        // Buttons
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        JButton updateBtn = new JButton("Update Item");
+        updateBtn.setBackground(new Color(52, 152, 219));
+        updateBtn.setForeground(Color.WHITE);
+        updateBtn.setFocusPainted(false);
+
+        JButton cancelBtn = new JButton("Cancel");
+        cancelBtn.setBackground(new Color(108, 117, 125));
+        cancelBtn.setForeground(Color.WHITE);
+        cancelBtn.setFocusPainted(false);
+
+        updateBtn.addActionListener(e -> {
+            try {
+                String name = nameField.getText().trim();
+                String category = (String) categoryCombo.getSelectedItem();
+                int currentStock = Integer.parseInt(stockField.getText());
+                int minStock = Integer.parseInt(minStockField.getText());
+                String unit = (String) unitCombo.getSelectedItem();
+                String supplier = supplierField.getText().trim();
+                double price = Double.parseDouble(priceField.getText());
+
+                if (name.isEmpty()) {
+                    JOptionPane.showMessageDialog(dialog, "Item name is required!", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                boolean success = InventoryDAO.updateInventoryItem(itemId, name, category, currentStock, minStock, unit, supplier, price);
+                if (success) {
+                    JOptionPane.showMessageDialog(dialog, "Item updated successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                    loadInventoryData();
+                    dialog.dispose();
+                } else {
+                    JOptionPane.showMessageDialog(dialog, "Failed to update item!", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(dialog, "Please enter valid numbers!", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        cancelBtn.addActionListener(e -> dialog.dispose());
+
+        buttonPanel.add(updateBtn);
+        buttonPanel.add(cancelBtn);
+
+        dialog.add(formPanel, BorderLayout.CENTER);
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
+        dialog.setVisible(true);
+    }
+
+    // Delete inventory item
+    private void deleteInventoryItem() {
+        int selectedRow = inventoryTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Please select an item to delete!", "Info", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        int confirm = JOptionPane.showConfirmDialog(this,
+            "Are you sure you want to delete this item?",
+            "Confirm Delete",
+            JOptionPane.YES_NO_OPTION);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            int itemId = (int) inventoryTable.getValueAt(selectedRow, 0);
+            boolean success = InventoryDAO.deleteInventoryItem(itemId);
+
+            if (success) {
+                JOptionPane.showMessageDialog(this, "Item deleted successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                loadInventoryData();
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to delete item!", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    // Show update stock dialog
+    private void showUpdateStockDialog() {
+        int selectedRow = inventoryTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Please select an item to update stock!", "Info", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        int itemId = (int) inventoryTable.getValueAt(selectedRow, 0);
+        String itemName = (String) inventoryTable.getValueAt(selectedRow, 1);
+        int currentStock = (int) inventoryTable.getValueAt(selectedRow, 3);
+
+        JDialog dialog = new JDialog(this, "Update Stock - " + itemName, true);
+        dialog.setSize(400, 200);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout(10, 10));
+
+        JPanel formPanel = new JPanel(new GridLayout(2, 2, 10, 10));
+        formPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 20));
+
+        formPanel.add(new JLabel("Current Stock:"));
+        formPanel.add(new JLabel(String.valueOf(currentStock)));
+
+        formPanel.add(new JLabel("New Stock:"));
+        JTextField newStockField = new JTextField(String.valueOf(currentStock));
+        formPanel.add(newStockField);
+
+        // Buttons
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        JButton updateBtn = new JButton("Update Stock");
+        updateBtn.setBackground(new Color(155, 89, 182));
+        updateBtn.setForeground(Color.WHITE);
+        updateBtn.setFocusPainted(false);
+
+        JButton cancelBtn = new JButton("Cancel");
+        cancelBtn.setBackground(new Color(108, 117, 125));
+        cancelBtn.setForeground(Color.WHITE);
+        cancelBtn.setFocusPainted(false);
+
+        updateBtn.addActionListener(e -> {
+            try {
+                int newStock = Integer.parseInt(newStockField.getText());
+
+                boolean success = InventoryDAO.updateStock(itemId, newStock);
+                if (success) {
+                    JOptionPane.showMessageDialog(dialog, "Stock updated successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                    loadInventoryData();
+                    dialog.dispose();
+                } else {
+                    JOptionPane.showMessageDialog(dialog, "Failed to update stock!", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(dialog, "Please enter a valid number!", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        cancelBtn.addActionListener(e -> dialog.dispose());
+
+        buttonPanel.add(updateBtn);
+        buttonPanel.add(cancelBtn);
+
+        dialog.add(formPanel, BorderLayout.CENTER);
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
+        dialog.setVisible(true);
+    }
+
+    // Show low stock alert
+    private void showLowStockAlert() {
+        List<Object[]> lowStockItems = InventoryDAO.getLowStockItems();
+
+        if (lowStockItems.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No low stock items found!", "Info", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        JDialog dialog = new JDialog(this, "Low Stock Alert", true);
+        dialog.setSize(700, 400);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout(10, 10));
+
+        // Title
+        JLabel title = new JLabel("⚠️ Low Stock Items - Immediate Action Required");
+        title.setFont(new Font("Arial", Font.BOLD, 16));
+        title.setForeground(new Color(231, 76, 60));
+        title.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        // Table
+        String[] columns = {"ID", "Item Name", "Category", "Current Stock", "Min Stock", "Unit"};
+        Object[][] data = lowStockItems.toArray(new Object[0][0]);
+        JTable lowStockTable = new JTable(data, columns);
+        lowStockTable.setRowHeight(30);
+        lowStockTable.setFont(new Font("Arial", Font.PLAIN, 13));
+        JScrollPane scrollPane = new JScrollPane(lowStockTable);
+
+        // Buttons
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        JButton notifyBtn = new JButton("Send Notification to Farmers");
+        notifyBtn.setBackground(new Color(241, 196, 15));
+        notifyBtn.setForeground(Color.WHITE);
+        notifyBtn.setFocusPainted(false);
+
+        JButton closeBtn = new JButton("Close");
+        closeBtn.setBackground(new Color(108, 117, 125));
+        closeBtn.setForeground(Color.WHITE);
+        closeBtn.setFocusPainted(false);
+
+        notifyBtn.addActionListener(e -> {
+            // Send notification to farmers about low stock
+            tabbedPane.setSelectedIndex(6); // Switch to Notifications tab
+            dialog.dispose();
+            JOptionPane.showMessageDialog(this,
+                "Switched to Notifications tab.\nYou can now send low stock alerts to farmers.",
+                "Info", JOptionPane.INFORMATION_MESSAGE);
+        });
+
+        closeBtn.addActionListener(e -> dialog.dispose());
+
+        buttonPanel.add(notifyBtn);
+        buttonPanel.add(closeBtn);
+
+        dialog.add(title, BorderLayout.NORTH);
+        dialog.add(scrollPane, BorderLayout.CENTER);
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
+        dialog.setVisible(true);
+    }
+
+
     // ========== MARKETPLACE ==========
+    private JTable marketplaceTable;
+
     private JPanel createMarketplacePanel() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBackground(Color.WHITE);
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        // Initialize database table
+        MarketplaceDAO.createMarketplaceTable();
 
         // Title & Buttons
         JPanel topPanel = new JPanel(new BorderLayout());
@@ -731,41 +1104,41 @@ public class adminDashboard extends JFrame {
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         buttonPanel.setBackground(Color.WHITE);
 
-        JButton approveProductBtn = createActionButton("Approve Product", new Color(46, 204, 113));
-        JButton updatePricingBtn = createActionButton("Update Pricing", new Color(52, 152, 219));
-        JButton manageOrdersBtn = createActionButton("Manage Orders", new Color(155, 89, 182));
+        JButton addProductBtn = createActionButton("Add Product", new Color(46, 204, 113));
+        JButton editProductBtn = createActionButton("Edit Product", new Color(52, 152, 219));
+        JButton deleteProductBtn = createActionButton("Delete Product", new Color(231, 76, 60));
+        JButton approveProductBtn = createActionButton("Approve Product", new Color(155, 89, 182));
+        JButton updatePriceBtn = createActionButton("Update Price", new Color(241, 196, 15));
+        JButton refreshBtn = createActionButton("🔄 Refresh", new Color(108, 117, 125));
 
         // Add button actions
-        approveProductBtn.addActionListener(e ->
-                JOptionPane.showMessageDialog(this, "Approve Product Listing - Coming soon!", "Info", JOptionPane.INFORMATION_MESSAGE)
-        );
-        updatePricingBtn.addActionListener(e ->
-                JOptionPane.showMessageDialog(this, "Update Product Pricing - Coming soon!", "Info", JOptionPane.INFORMATION_MESSAGE)
-        );
-        manageOrdersBtn.addActionListener(e ->
-                JOptionPane.showMessageDialog(this, "Manage Marketplace Orders - Coming soon!", "Info", JOptionPane.INFORMATION_MESSAGE)
-        );
+        addProductBtn.addActionListener(e -> showAddProductDialog());
+        editProductBtn.addActionListener(e -> showEditProductDialog());
+        deleteProductBtn.addActionListener(e -> deleteProduct());
+        approveProductBtn.addActionListener(e -> approveProduct());
+        updatePriceBtn.addActionListener(e -> showUpdatePriceDialog());
+        refreshBtn.addActionListener(e -> loadMarketplaceData());
 
+        buttonPanel.add(addProductBtn);
+        buttonPanel.add(editProductBtn);
+        buttonPanel.add(deleteProductBtn);
         buttonPanel.add(approveProductBtn);
-        buttonPanel.add(updatePricingBtn);
-        buttonPanel.add(manageOrdersBtn);
+        buttonPanel.add(updatePriceBtn);
+        buttonPanel.add(refreshBtn);
 
         topPanel.add(title, BorderLayout.NORTH);
         topPanel.add(buttonPanel, BorderLayout.SOUTH);
 
         // Table
         String[] columns = {"ID", "Product", "Farmer", "Price", "Available Qty", "Status", "Approval", "Orders"};
-        Object[][] data = {
-                {1, "Organic Wheat", "John Farmer", "$245/ton", "500 kg", "Active", "Approved", "12"},
-                {2, "Fresh Tomatoes", "Alice Brown", "$85/ton", "200 kg", "Active", "Approved", "8"},
-                {3, "Sweet Corn", "Mary Smith", "$180/ton", "350 kg", "Active", "Pending", "0"},
-                {4, "Brown Rice", "Bob Johnson", "$320/ton", "600 kg", "Active", "Approved", "15"}
-        };
+        marketplaceTable = new JTable();
+        marketplaceTable.setRowHeight(30);
+        marketplaceTable.setFont(new Font("Arial", Font.PLAIN, 13));
+        marketplaceTable.getTableHeader().setFont(new Font("Arial", Font.BOLD, 12));
+        JScrollPane scrollPane = new JScrollPane(marketplaceTable);
 
-        JTable table = new JTable(data, columns);
-        table.setRowHeight(30);
-        table.setFont(new Font("Arial", Font.PLAIN, 13));
-        JScrollPane scrollPane = new JScrollPane(table);
+        // Load data from database
+        loadMarketplaceData();
 
         panel.add(topPanel, BorderLayout.NORTH);
         panel.add(scrollPane, BorderLayout.CENTER);
@@ -1274,6 +1647,298 @@ public class adminDashboard extends JFrame {
         dialog.add(scrollPane, BorderLayout.CENTER);
         dialog.add(buttonPanel, BorderLayout.SOUTH);
         dialog.setVisible(true);
+    }
+
+    // ========== MARKETPLACE MANAGEMENT METHODS ==========
+
+    // Load marketplace data from database
+    private void loadMarketplaceData() {
+        List<Object[]> products = MarketplaceDAO.getAllProducts();
+        String[] columns = {"ID", "Product", "Farmer", "Price", "Available Qty", "Status", "Approval", "Orders"};
+        Object[][] data = products.toArray(new Object[0][0]);
+        marketplaceTable.setModel(new javax.swing.table.DefaultTableModel(data, columns));
+    }
+
+    // Show add product dialog
+    private void showAddProductDialog() {
+        JDialog dialog = new JDialog(this, "Add Marketplace Product", true);
+        dialog.setSize(500, 500);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout(10, 10));
+
+        JPanel formPanel = new JPanel(new GridLayout(7, 2, 10, 10));
+        formPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 20));
+
+        // Product Name
+        formPanel.add(new JLabel("Product Name:"));
+        JTextField nameField = new JTextField();
+        formPanel.add(nameField);
+
+        // Farmer Name
+        formPanel.add(new JLabel("Farmer Name:"));
+        JTextField farmerField = new JTextField();
+        formPanel.add(farmerField);
+
+        // Category
+        formPanel.add(new JLabel("Category:"));
+        String[] categories = {"Vegetables", "Fruits", "Grains", "Dairy", "Organic", "Seeds", "Other"};
+        JComboBox<String> categoryCombo = new JComboBox<>(categories);
+        formPanel.add(categoryCombo);
+
+        // Price
+        formPanel.add(new JLabel("Price per Unit:"));
+        JTextField priceField = new JTextField("0.00");
+        formPanel.add(priceField);
+
+        // Quantity
+        formPanel.add(new JLabel("Quantity Available:"));
+        JTextField quantityField = new JTextField("0");
+        formPanel.add(quantityField);
+
+        // Unit
+        formPanel.add(new JLabel("Unit:"));
+        String[] units = {"kg", "ton", "L", "pcs", "dozen", "box"};
+        JComboBox<String> unitCombo = new JComboBox<>(units);
+        formPanel.add(unitCombo);
+
+        // Description
+        formPanel.add(new JLabel("Description:"));
+        JTextField descField = new JTextField();
+        formPanel.add(descField);
+
+        // Buttons
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        JButton saveBtn = new JButton("Add Product");
+        saveBtn.setBackground(new Color(46, 204, 113));
+        saveBtn.setForeground(Color.WHITE);
+        saveBtn.setFocusPainted(false);
+
+        JButton cancelBtn = new JButton("Cancel");
+        cancelBtn.setBackground(new Color(108, 117, 125));
+        cancelBtn.setForeground(Color.WHITE);
+        cancelBtn.setFocusPainted(false);
+
+        saveBtn.addActionListener(e -> {
+            try {
+                String name = nameField.getText().trim();
+                String farmer = farmerField.getText().trim();
+                String category = (String) categoryCombo.getSelectedItem();
+                double price = Double.parseDouble(priceField.getText());
+                int quantity = Integer.parseInt(quantityField.getText());
+                String unit = (String) unitCombo.getSelectedItem();
+                String description = descField.getText().trim();
+
+                if (name.isEmpty() || farmer.isEmpty()) {
+                    JOptionPane.showMessageDialog(dialog, "Product name and farmer name are required!", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                boolean success = MarketplaceDAO.addProduct(name, farmer, price, quantity, unit, category, description);
+                if (success) {
+                    JOptionPane.showMessageDialog(dialog, "Product added successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                    loadMarketplaceData();
+                    dialog.dispose();
+                } else {
+                    JOptionPane.showMessageDialog(dialog, "Failed to add product!", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(dialog, "Please enter valid numbers for price and quantity!", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        cancelBtn.addActionListener(e -> dialog.dispose());
+
+        buttonPanel.add(saveBtn);
+        buttonPanel.add(cancelBtn);
+
+        dialog.add(formPanel, BorderLayout.CENTER);
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
+        dialog.setVisible(true);
+    }
+
+    // Show edit product dialog
+    private void showEditProductDialog() {
+        int selectedRow = marketplaceTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Please select a product to edit!", "Info", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        int productId = (int) marketplaceTable.getValueAt(selectedRow, 0);
+        Object[] product = MarketplaceDAO.getProductById(productId);
+
+        if (product == null) {
+            JOptionPane.showMessageDialog(this, "Product not found!", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        JDialog dialog = new JDialog(this, "Edit Product", true);
+        dialog.setSize(500, 500);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout(10, 10));
+
+        JPanel formPanel = new JPanel(new GridLayout(6, 2, 10, 10));
+        formPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 20));
+
+        // Product Name
+        formPanel.add(new JLabel("Product Name:"));
+        JTextField nameField = new JTextField((String) product[1]);
+        formPanel.add(nameField);
+
+        // Farmer Name
+        formPanel.add(new JLabel("Farmer Name:"));
+        JTextField farmerField = new JTextField((String) product[2]);
+        formPanel.add(farmerField);
+
+        // Category
+        formPanel.add(new JLabel("Category:"));
+        String[] categories = {"Vegetables", "Fruits", "Grains", "Dairy", "Organic", "Seeds", "Other"};
+        JComboBox<String> categoryCombo = new JComboBox<>(categories);
+        categoryCombo.setSelectedItem(product[6]);
+        formPanel.add(categoryCombo);
+
+        // Price
+        formPanel.add(new JLabel("Price:"));
+        JTextField priceField = new JTextField(String.valueOf(product[3]));
+        formPanel.add(priceField);
+
+        // Quantity
+        formPanel.add(new JLabel("Quantity:"));
+        JTextField quantityField = new JTextField(String.valueOf(product[4]));
+        formPanel.add(quantityField);
+
+        // Unit
+        formPanel.add(new JLabel("Unit:"));
+        String[] units = {"kg", "ton", "L", "pcs", "dozen", "box"};
+        JComboBox<String> unitCombo = new JComboBox<>(units);
+        unitCombo.setSelectedItem(product[5]);
+        formPanel.add(unitCombo);
+
+        // Buttons
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        JButton updateBtn = new JButton("Update Product");
+        updateBtn.setBackground(new Color(52, 152, 219));
+        updateBtn.setForeground(Color.WHITE);
+        updateBtn.setFocusPainted(false);
+
+        JButton cancelBtn = new JButton("Cancel");
+        cancelBtn.setBackground(new Color(108, 117, 125));
+        cancelBtn.setForeground(Color.WHITE);
+        cancelBtn.setFocusPainted(false);
+
+        updateBtn.addActionListener(e -> {
+            try {
+                String name = nameField.getText().trim();
+                String farmer = farmerField.getText().trim();
+                String category = (String) categoryCombo.getSelectedItem();
+                double price = Double.parseDouble(priceField.getText());
+                int quantity = Integer.parseInt(quantityField.getText());
+                String unit = (String) unitCombo.getSelectedItem();
+
+                if (name.isEmpty() || farmer.isEmpty()) {
+                    JOptionPane.showMessageDialog(dialog, "Product name and farmer name are required!", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                boolean success = MarketplaceDAO.updateProduct(productId, name, farmer, price, quantity, unit, category);
+                if (success) {
+                    JOptionPane.showMessageDialog(dialog, "Product updated successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                    loadMarketplaceData();
+                    dialog.dispose();
+                } else {
+                    JOptionPane.showMessageDialog(dialog, "Failed to update product!", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(dialog, "Please enter valid numbers!", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        cancelBtn.addActionListener(e -> dialog.dispose());
+
+        buttonPanel.add(updateBtn);
+        buttonPanel.add(cancelBtn);
+
+        dialog.add(formPanel, BorderLayout.CENTER);
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
+        dialog.setVisible(true);
+    }
+
+    // Delete product
+    private void deleteProduct() {
+        int selectedRow = marketplaceTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Please select a product to delete!", "Info", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        int confirm = JOptionPane.showConfirmDialog(this,
+            "Are you sure you want to delete this product?",
+            "Confirm Delete",
+            JOptionPane.YES_NO_OPTION);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            int productId = (int) marketplaceTable.getValueAt(selectedRow, 0);
+            boolean success = MarketplaceDAO.deleteProduct(productId);
+
+            if (success) {
+                JOptionPane.showMessageDialog(this, "Product deleted successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                loadMarketplaceData();
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to delete product!", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    // Approve product
+    private void approveProduct() {
+        int selectedRow = marketplaceTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Please select a product to approve!", "Info", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        int productId = (int) marketplaceTable.getValueAt(selectedRow, 0);
+        boolean success = MarketplaceDAO.approveProduct(productId);
+
+        if (success) {
+            JOptionPane.showMessageDialog(this, "Product approved successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+            loadMarketplaceData();
+        } else {
+            JOptionPane.showMessageDialog(this, "Failed to approve product!", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    // Show update price dialog
+    private void showUpdatePriceDialog() {
+        int selectedRow = marketplaceTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Please select a product to update price!", "Info", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        int productId = (int) marketplaceTable.getValueAt(selectedRow, 0);
+        String productName = (String) marketplaceTable.getValueAt(selectedRow, 1);
+
+        String priceStr = JOptionPane.showInputDialog(this,
+            "Enter new price for " + productName + ":",
+            "Update Price",
+            JOptionPane.QUESTION_MESSAGE);
+
+        if (priceStr != null && !priceStr.trim().isEmpty()) {
+            try {
+                double newPrice = Double.parseDouble(priceStr);
+                boolean success = MarketplaceDAO.updatePrice(productId, newPrice);
+
+                if (success) {
+                    JOptionPane.showMessageDialog(this, "Price updated successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                    loadMarketplaceData();
+                } else {
+                    JOptionPane.showMessageDialog(this, "Failed to update price!", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Please enter a valid price!", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
     }
 
     // ========== HELPER METHODS ==========
