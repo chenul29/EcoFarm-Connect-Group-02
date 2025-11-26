@@ -55,6 +55,21 @@ public class adminDashboard extends JFrame {
         tabbedPane.addTab("🔔 Notifications", createNotificationsPanel());
         tabbedPane.addTab("🔍 Traceability", createTraceabilityPanel());
 
+        // Add tab change listener to open analytics form
+        tabbedPane.addChangeListener(e -> {
+            int selectedIndex = tabbedPane.getSelectedIndex();
+            // Index 1 is "Crop Management" tab
+            if (selectedIndex == 1) {
+                // Open crop soil management form
+                new cropSoilManagement().setVisible(true);
+            }
+            // Index 5 is "Reports & Analytics" tab
+            if (selectedIndex == 5) {
+                // Open analytics form
+                new analytics().setVisible(true);
+            }
+        });
+
         mainPanel.add(tabbedPane, BorderLayout.CENTER);
 
         setContentPane(mainPanel);
