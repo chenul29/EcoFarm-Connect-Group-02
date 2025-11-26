@@ -164,7 +164,7 @@ public class customerPotral extends javax.swing.JFrame {
             }
         });
 
-        jButton2.setBackground(new java.awt.Color(204, 0, 204));
+        jButton2.setBackground(new java.awt.Color(102, 102, 255));
         jButton2.setText("Refresh for Products");
         jButton2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -175,7 +175,7 @@ public class customerPotral extends javax.swing.JFrame {
         jLabel4.setIcon(new javax.swing.ImageIcon(getClass().getResource("/plant.jpg"))); // NOI18N
         jLabel4.setText("jLabel2");
 
-        jButton4.setBackground(new java.awt.Color(255, 0, 153));
+        jButton4.setBackground(new java.awt.Color(255, 255, 0));
         jButton4.setText("Pre-Order Products");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
